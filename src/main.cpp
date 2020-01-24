@@ -89,6 +89,41 @@ void autonStack()
   }
 }
 
+void moveRobotManual(DIRECTION direction, int delay, int movFactor)
+{
+  int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
+
+  switch (direction)
+  {
+  case FORWARD:
+    cofRB = -1;
+    cofLF = -1;
+    break;
+
+  case REVERSE:
+    cofRB = -1;
+    cofLF = -1;
+    break;
+
+  case LEFT:
+    cofRB = -1;
+    cofLF = -1;
+    break;
+
+  case RIGHT:
+    cofRB = -1;
+    cofLF = -1;
+    break;
+  }
+
+  leftBack.move(movFactor * cofLB);
+  leftFront.move(movFactor * cofLF);
+  rightBack.move(movFactor * cofRB);
+  rightFront.move(movFactor * cofRF);
+
+  pros::delay(delay);
+}
+
 void moveRobot(double encoderValue, DIRECTION direction)
 {
   int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
@@ -151,48 +186,56 @@ void competition_initalize()
 
 void opcontrol()
 {
+
+  int distance = 0;
   int angle = 0;
-  int counter = 0;
+  bool holdMove;
 
-  int analogSensitivity = 0.8;
-  int encoderVal = encoder.get_value();
-
-  while (encoder.get_value() < 1000)
-  {
-    // Move forward for 1000 ticks
-    pros::lcd::set_text(1, std::to_string(encoderVal));
-    pros::delay(50);
-  }
+  int hit = 0;
 
   while (true)
   {
-    pros::delay(delay * 2);
+    pros::delay(20);
 
-    angle = gyro.get_value();
+    pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
+    leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    center.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
 
-    // Split arcade controls
-    leftFront.move(-1*master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) - analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    rightFront.move(-1*master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) - analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    rightBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    //split arcade controls through transmission drive
 
-    // Stop intake
     leftIntake.move_velocity(0);
+    rightIntake.move_velocity(-0);
+    leftIntake.move_velocity(-0);
     rightIntake.move_velocity(0);
 
     leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    center.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-    // Transmission drive moves angler
+    // shift buttons r1 (for tray tilt) and r2 (for goofy arm)
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+    {
+      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+      {
+        leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      }
+      leftFront.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      leftBack.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      rightBack.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      rightFront.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+    }
+
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
     {
       lift.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
     }
 
-    // Intake controls
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && (!master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)))
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
     {
       leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -200,8 +243,7 @@ void opcontrol()
       rightIntake.move_velocity(-200);
       pros::delay(20);
     }
-
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && (!master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)))
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
     {
       leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -210,19 +252,51 @@ void opcontrol()
       pros::delay(20);
     }
 
-    // Goofy controls
+    /*
+		 * In the initalization (before the competition starts), the grippy tray will always be set up
+		 * in a neutral position and the code will attempt to return the grippy arm to this neutral position
+		 * unless a different position is required (either due to driver control or in the auton sequence).
+		 */
+
+    // Driver control and macros for the grippy arm
+
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
     {
       center.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       center.move_velocity(50);
     }
-
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
     {
       center.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       center.move_velocity(-50);
     }
+
+    pros::delay(20);
+
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+    {
+      center.move(50);
+    }
+    else
+    {
+      center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
+    {
+      center.move(-50);
+    }
+    else
+    {
+      center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+
+    //tower macros
   }
+}
+
+void deploy()
+{
 }
 
 void bigRed()
@@ -388,8 +462,6 @@ void autonomous()
   lift.move_velocity(-80);
   pros::delay(1800);
 
-  //lift.move_velocity(0);
-  //lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
   lift.move_velocity(0);
   lift.move_velocity(20);
   pros::delay(100);
@@ -410,15 +482,6 @@ void autonomous()
   rightFront.move_velocity(0);
   lift.move_velocity(0);
   lift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-
-  // lift.move_velocity(-30);
-  // pros::delay(800);
-
-  // pros::delay(1500);
-  // leftFront.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  // leftBack.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  // rightFront.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  // rightBack.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 
   leftFront.move_velocity(10);
   leftBack.move_velocity(10);
