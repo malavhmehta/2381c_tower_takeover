@@ -15,7 +15,7 @@ pros::Motor leftIntake(18);
 pros::Motor rightIntake(13);
 pros::Motor lift(14);
 pros::Motor center(16);
-pros::ADIEncoder encoder (QUAD_TOP_PORT, QUAD_BOTTOM_PORT, false);
+pros::ADIEncoder encoder(QUAD_TOP_PORT, QUAD_BOTTOM_PORT, false);
 
 pros::ADIAnalogIn gyro('H');
 
@@ -149,10 +149,6 @@ void competition_initalize()
 {
 }
 
-void autonomous()
-{
-}
-
 void opcontrol()
 {
   int angle = 0;
@@ -161,7 +157,8 @@ void opcontrol()
   int analogSensitivity = 0.8;
   int encoderVal = encoder.get_value();
 
-  while (encoder.get_value() < 1000) {
+  while (encoder.get_value() < 1000)
+  {
     // Move forward for 1000 ticks
     pros::lcd::set_text(1, std::to_string(encoderVal));
     pros::delay(50);
@@ -174,10 +171,10 @@ void opcontrol()
     angle = gyro.get_value();
 
     // Split arcade controls
-    leftFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    leftBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) - analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) - analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    leftFront.move(-1*master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) - analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    rightFront.move(-1*master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) - analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+    rightBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + analogSensitivity * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
 
     // Stop intake
     leftIntake.move_velocity(0);
@@ -228,3 +225,215 @@ void opcontrol()
   }
 }
 
+void bigRed()
+{
+  leftBack.move(-60);
+  leftFront.move(60);
+  rightBack.move(60);
+  rightFront.move(-60);
+
+  rightIntake.move(-186 / 2);
+  leftIntake.move(186 / 2);
+
+  pros::delay(1200);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move_velocity(60);
+  leftFront.move_velocity(-60);
+  rightBack.move_velocity(-60);
+  rightFront.move_velocity(60);
+
+  pros::delay(800);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  pros::delay(20);
+
+  leftBack.move(70);
+  leftFront.move(-70);
+  rightBack.move(70);
+  rightFront.move(-70);
+
+  pros::delay(650);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+  pros::delay(20);
+  leftBack.move(-60);
+  leftFront.move(60);
+  rightBack.move(60);
+  rightFront.move(-60);
+
+  pros::delay(1300);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  rightIntake.move(186 / 2);
+  leftIntake.move(-186 / 2);
+
+  pros::delay(1500);
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  pros::delay(2000);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+}
+
+void bigBlue()
+{
+  leftBack.move(-60);
+  leftFront.move(60);
+  rightBack.move(60);
+  rightFront.move(-60);
+
+  rightIntake.move(-186 / 2);
+  leftIntake.move(186 / 2);
+
+  pros::delay(1200);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move_velocity(60);
+  leftFront.move_velocity(-60);
+  rightBack.move_velocity(-60);
+  rightFront.move_velocity(60);
+
+  pros::delay(800);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  pros::delay(20);
+
+  leftBack.move(-70);
+  leftFront.move(70);
+  rightBack.move(-70);
+  rightFront.move(70);
+
+  pros::delay(650);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+  pros::delay(20);
+  leftBack.move(-60);
+  leftFront.move(60);
+  rightBack.move(60);
+  rightFront.move(-60);
+
+  pros::delay(1300);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  rightIntake.move(186 / 2);
+  leftIntake.move(-186 / 2);
+
+  pros::delay(1500);
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  pros::delay(2000);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+}
+
+void autonomous()
+{
+  lift.move_velocity(-80);
+  pros::delay(1800);
+
+  //lift.move_velocity(0);
+  //lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+  lift.move_velocity(0);
+  lift.move_velocity(20);
+  pros::delay(100);
+  lift.move_velocity(0);
+
+  lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
+  leftFront.move_velocity(-90);
+  leftBack.move_velocity(-90);
+  rightBack.move_velocity(90);
+  rightFront.move_velocity(90);
+
+  pros::delay(500);
+
+  leftFront.move_velocity(-0);
+  leftBack.move_velocity(-0);
+  rightBack.move_velocity(0);
+  rightFront.move_velocity(0);
+  lift.move_velocity(0);
+  lift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+
+  // lift.move_velocity(-30);
+  // pros::delay(800);
+
+  // pros::delay(1500);
+  // leftFront.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+  // leftBack.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+  // rightFront.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+  // rightBack.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+
+  leftFront.move_velocity(10);
+  leftBack.move_velocity(10);
+  rightBack.move_velocity(-10);
+  rightFront.move_velocity(-10);
+  lift.move_velocity(10);
+  pros::delay(1000);
+  lift.move_velocity(0);
+
+  leftFront.move_velocity(-0);
+  leftBack.move_velocity(-0);
+  rightBack.move_velocity(0);
+  rightFront.move_velocity(0);
+
+  pros::delay(1200);
+
+  bigRed();
+}
