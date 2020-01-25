@@ -1,11 +1,30 @@
+/*
+ * Created by: Team 2381C
+ * For:        VEX VRC Competition (Tower Takeover) 2019-2020
+ * On:         January 25, 2020 (for Terrebonne Competition)
+ * 
+ * This project was created as code for the VEX VRC Tower Takeover competition in
+ * the 2019-2020 competition season. It consists of the main and pid files. The main
+ * focus of the programming aspect on the team is to program:
+ *    - driver control (including macros); and
+ *    - create an autonomous sequence driver pathway.
+ * 
+ * The challenges/problems solved through this project was to achieve both criteria
+ * successfully, which means to ensure reliabilitym, simplicity and of course, make sure
+ * that everything is working for the competition.
+ */
+
+// Including required .
 #include "main.h"
 #include "pros/api_legacy.h"
 #include <array>
 #include "pid.hpp"
 
+// Defining ports for the Quadratic Encoder (for the tracking of wheel movements).
 #define QUAD_TOP_PORT 1
 #define QUAD_BOTTOM_PORT 2
 
+// Declaring and initizalizing required motors and analog sensors.
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 pros::Motor leftBack(12);
 pros::Motor leftFront(11);
@@ -16,14 +35,16 @@ pros::Motor rightIntake(13);
 pros::Motor lift(14);
 pros::Motor center(16);
 pros::ADIEncoder encoder(QUAD_TOP_PORT, QUAD_BOTTOM_PORT, false);
-
 pros::ADIAnalogIn gyro('H');
 
+// Global and constant delay.
 int delay = 20;
 
+// Defining PID Params for the angler and the drivebase.
 std::array<double, 3> anglerPIDParams = {0.04 * 4, 0.000555 * 4, 0.7 * 3.5};
 std::array<double, 3> drivebasePIDParams = {0.3, 0, 0};
 
+// Initializing the PIDs using the above paramenters, by calling the PID class.
 PID *anglerPIDController = new PID(
     &anglerPIDParams[0],
     &anglerPIDParams[1],
@@ -34,6 +55,9 @@ PID *drivebasePIDController = new PID(
     &drivebasePIDParams[1],
     &drivebasePIDParams[2]);
 
+// ENUMERATED variables used for when these variables are passed as parameters in functions.
+
+// Possible DIRECTIONS
 enum DIRECTION
 {
   FORWARD,
@@ -46,6 +70,7 @@ enum DIRECTION
   RIGHT_BACK
 };
 
+// Possible starting POSITION for the AUTONOMOUS sequence.
 enum AUTON_POS
 {
   BIG_RED,
@@ -54,6 +79,7 @@ enum AUTON_POS
   SMALL_BLUE
 };
 
+// Possible TURNS.
 enum TURN
 {
   N,
@@ -66,33 +92,57 @@ enum TURN
   NW
 };
 
+// Define the starting AUTONOMOUS POSITION at the top, which can be changed match after match.
 AUTON_POS startingPosition = BIG_RED;
 
+/**
+ * Calls the angler PID to stack the cubes. Essentially, this function creates a while loop
+ * under which the program is to stack the cubes. For each iteration of the loop, a new value
+ * is received from the angler PID controller, which is then passed into each motor, and the motors
+ * are then moved accordingly.
+ */
 void autonStack()
 {
   while (true)
   {
     double movFactor = anglerPIDController->update(-720, rightBack.get_position());
 
+    // Using the transmission for the stacking of cubes.
     leftFront.move(-movFactor);
     leftBack.move(-movFactor);
     rightFront.move(movFactor);
     rightBack.move(movFactor);
 
+    // Checking for the sentinel value (using the motor's encoder values) to determine if the operation
+    // has been completed.
     if (abs(rightBack.get_position() + 730) < 20)
     {
       rightBack.tare_position();
       break;
     }
 
+    // Delay as to not overload the motor.
     pros::delay(delay);
   }
 }
 
+/**
+ * For the testing of a manual (non-PID) based autonomous drivepath. This function
+ * can be called to move the robot in any valid direction, with a predefined delay
+ * and a given movemenet factor.
+ * 
+ * @param direction gets the direction to determine how the motors in the H-drive
+ *                  configuration need to be moved.
+ * @param delay     determines the delay after the motor movement, for the motor's
+ *                  motion to fully complete, instead of being called instantaneously.
+ * @param movFactor determines how much the motors are to be moved.
+ */
 void moveRobotManual(DIRECTION direction, int delay, int movFactor)
 {
+  // Motor coefficients for the H-Drive.
   int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
 
+  // Check the direction, and change the motor coefficient accordingly.
   switch (direction)
   {
   case FORWARD:
@@ -101,33 +151,51 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor)
     break;
 
   case REVERSE:
-    cofRB = -1;
-    cofLF = -1;
+    cofRF = -1;
+    cofLB = -1;
     break;
 
   case LEFT:
     cofRB = -1;
-    cofLF = -1;
+    cofLB = -1;
     break;
 
   case RIGHT:
-    cofRB = -1;
+    cofRF = -1;
     cofLF = -1;
     break;
   }
 
+  // Move the motors with the movement factor and multiplied by the coefficient which
+  // determines whether the movement factor needs to be negative.
   leftBack.move(movFactor * cofLB);
   leftFront.move(movFactor * cofLF);
   rightBack.move(movFactor * cofRB);
   rightFront.move(movFactor * cofRF);
 
+  // Delay to ensure that the movement is completed.
   pros::delay(delay);
 }
 
+/**
+ * For the PID based autonomous drivepath. This function can be called to move the robot
+ * in any valid direction, using a PID controller for the drive base. Essentially, the PID
+ * params and PID controller defined at the top is called here to get values for the
+ * drivebase's movement, and to ensure reliability of the movements. The concept for
+ * this function and the loop is the same as the one written for the autonomous stacking
+ * (which makes use of the angler PID).
+ * 
+ * @param direction     gets the direction to determine how the motors in the H-drive
+ *                      configuration need to be moved.
+ * @param envoderValue  used to determine how much the robot needs to be moved (by getting
+ *                      the motor's position and comparing it to where it needs to be).
+ */
 void moveRobot(double encoderValue, DIRECTION direction)
 {
+  // Motor coefficients for the H-Drive.
   int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
 
+  // Check the direction, and change the motor coefficient accordingly.
   switch (direction)
   {
   case FORWARD:
@@ -170,53 +238,129 @@ void moveRobot(double encoderValue, DIRECTION direction)
   }
 }
 
+/**
+ * Called at the initialization of the competition. Turns on the brain's LCD.
+ */
 void initialize()
 {
   pros::lcd::initialize();
   pros::lcd::set_text(1, "Go 2381C!");
 }
 
+/**
+ * Pre-built disabled function required for the competition.
+ */
 void disabled()
 {
 }
 
+/**
+ * Required competition-specific initialize code.
+ */
 void competition_initalize()
 {
 }
 
+// Global variable that determines the mode for the goofy arm macros (the extent to which the goofy
+// arms needs to be raised).
+int mode = 0;
+
+/**
+ * This function is a macro for the raising of the foody arms. Essentially, it takes in the mode and
+ * then raises the goofy arm to the required level as specified by the driver. The competitive
+ * advantage of this function is that it ensures reliability during a competition match.
+ */
+void towerMacros()
+{
+  // The different encoder values for each tower.
+  double small_val = -1900;
+  double mid_val = -2280;
+
+  pros::delay(50);
+
+  //infinite while loop which continually updates the position of the goofy arm motor
+  while (true)
+  {
+    //conditional statement checks whether the button is being pressed or not
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+    {
+      if (mode > 2)
+      {
+        mode = 0;
+        break;
+      }
+    }
+
+    /*
+     * Conditional statement that tells the goofy arm motor which position to move to. 
+     *    (1) When the mode is equivalent to 1, the goofy arm will raise itself to the height of the smaller tower.
+     *    (2) When the mode is equivalent to 2, the goofy arm will raise itself to the height of the medium tower.
+     */
+    if ((mode == 1 && lift.get_position() > small_val) || (mode == 2 && lift.get_position() > mid_val))
+    {
+      // lift.move_velocity(-30);
+      pros::delay(20);
+
+      //this conditional statement forces the transmission angler to move to an exact position of 397 ticks
+      if (rightBack.get_position() < 397)
+      {
+        leftFront.move(-30);
+        leftBack.move(-30);
+        rightBack.move(30);
+        rightFront.move(30);
+      }
+    }
+    else
+    {
+      break;
+    }
+  }
+}
+
+// Global variable that determines whether the R2 button should act as a 'SHIFT' key or
+// as the controller for the Goofy Arm macros.
+int tower_counter = 0;
+
+/**
+ * Primary function containing the necessary code for the driver to drive and maneuver the
+ * robot. It also contains the necessary event listeners to trigger the driver's movements
+ * and enable macros as requested.
+ */
 void opcontrol()
 {
-
-  int distance = 0;
-  int angle = 0;
   bool holdMove;
+  bool macroEnabled = false;
 
   int hit = 0;
 
   while (true)
   {
     pros::delay(20);
-
+    pros::lcd::set_text(2, "Button Counter" + std::to_string(mode));
+    pros::lcd::set_text(3, "A Button " + std::to_string(tower_counter));
+    pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
+
+    // Split acrade controls that control the drive base
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     center.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
 
-    //split arcade controls through transmission drive
-
+    // Keeping the motors at move_velocity(0) keeps the motor position locked
     leftIntake.move_velocity(0);
     rightIntake.move_velocity(-0);
     leftIntake.move_velocity(-0);
     rightIntake.move_velocity(0);
 
+    // brake_bold keeps the motors in brake mode so the motors will actively resist movement, are locked in position
     leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-    // shift buttons r1 (for tray tilt) and r2 (for goofy arm)
+    // Shift buttons R1 (for tray tilt) and R2 (for goofy arm)
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
     {
       if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
@@ -235,6 +379,7 @@ void opcontrol()
       lift.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
     }
 
+    // Intake controls using the L2 and L1 buttons
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
     {
       leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -259,7 +404,6 @@ void opcontrol()
 		 */
 
     // Driver control and macros for the grippy arm
-
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
     {
       center.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -291,93 +435,86 @@ void opcontrol()
       center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     }
 
-    //tower macros
+    // Tower Macros
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+    {
+      tower_counter++;
+    }
+
+    // Even numbers will toggle a separate macro using the A button
+    if (tower_counter % 2 != 0)
+    {
+      macroEnabled = !macroEnabled;
+      pros::lcd::set_text(7, "The button has been toggled");
+    }
+    else
+    {
+      pros::lcd::set_text(7, "The button has not been toggled");
+    }
+
+    // Setting a conditional statement which will call the macro function for the small and medium towers
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && macroEnabled)
+    {
+      mode++;
+      towerMacros();
+    }
   }
 }
 
+// Deploy function which will be called in autonomous to extend the tray of the robot
 void deploy()
 {
 }
 
-void bigRed()
+// Stops the drivebase by setting all motors to 0 velocity;
+void stopDrivebase()
 {
-  leftBack.move(-60);
-  leftFront.move(60);
-  rightBack.move(60);
-  rightFront.move(-60);
-
-  rightIntake.move(-186 / 2);
-  leftIntake.move(186 / 2);
-
-  pros::delay(1200);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  rightIntake.move(0);
-  leftIntake.move(0);
-
-  leftBack.move_velocity(60);
-  leftFront.move_velocity(-60);
-  rightBack.move_velocity(-60);
-  rightFront.move_velocity(60);
-
-  pros::delay(800);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  pros::delay(20);
-
-  leftBack.move(70);
-  leftFront.move(-70);
-  rightBack.move(70);
-  rightFront.move(-70);
-
-  pros::delay(650);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-  pros::delay(20);
-  leftBack.move(-60);
-  leftFront.move(60);
-  rightBack.move(60);
-  rightFront.move(-60);
-
-  pros::delay(1300);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  rightIntake.move(186 / 2);
-  leftIntake.move(-186 / 2);
-
-  pros::delay(1500);
-
-  rightIntake.move(0);
-  leftIntake.move(0);
-
-  leftBack.move(60);
-  leftFront.move(-60);
-  rightBack.move(-60);
-  rightFront.move(60);
-
-  pros::delay(2000);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
+  moveRobotManual(FORWARD, 100, 0);
 }
 
+/**
+ * Defines the drivepath for the big red goal zone. The motion are currently manually
+ * profiled using the 'moveRobotManual' function.
+ */
+void bigRed()
+{
+  // Intake the first cube.
+  rightIntake.move(-186 / 2);
+  leftIntake.move(186 / 2);
+  moveRobotManual(FORWARD, 1200, 60);
+
+  stopDrivebase();
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  // Move the robot backwards.
+  moveRobotManual(REVERSE, 800, 60);
+  stopDrivebase();
+
+  // Turn the robot towards the goal zone (LEFT).
+  moveRobotManual(LEFT, 650, 70);
+  stopDrivebase();
+
+  // Move the robot all the way towards the goal zone.
+  moveRobotManual(FORWARD, 1300, 60);
+
+  // Outtake the cube.
+  rightIntake.move(186 / 2);
+  leftIntake.move(-186 / 2);
+  moveRobotManual(FORWARD, 1500, 0);
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+  
+  // Drive away from the goal zone.
+  moveRobotManual(REVERSE, 2000, 60);
+  stopDrivebase();
+}
+
+/**
+ * Defines the drivepath for the big blue goal zone. The motion are currently manually
+ * profiled using the 'moveRobotManual' function.
+ */
 void bigBlue()
 {
   leftBack.move(-60);
@@ -459,44 +596,12 @@ void bigBlue()
 
 void autonomous()
 {
-  lift.move_velocity(-80);
-  pros::delay(1800);
-
-  lift.move_velocity(0);
-  lift.move_velocity(20);
-  pros::delay(100);
-  lift.move_velocity(0);
-
-  lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-
-  leftFront.move_velocity(-90);
-  leftBack.move_velocity(-90);
-  rightBack.move_velocity(90);
-  rightFront.move_velocity(90);
-
-  pros::delay(500);
-
-  leftFront.move_velocity(-0);
-  leftBack.move_velocity(-0);
-  rightBack.move_velocity(0);
-  rightFront.move_velocity(0);
-  lift.move_velocity(0);
-  lift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-
-  leftFront.move_velocity(10);
-  leftBack.move_velocity(10);
-  rightBack.move_velocity(-10);
-  rightFront.move_velocity(-10);
-  lift.move_velocity(10);
-  pros::delay(1000);
-  lift.move_velocity(0);
-
-  leftFront.move_velocity(-0);
-  leftBack.move_velocity(-0);
-  rightBack.move_velocity(0);
-  rightFront.move_velocity(0);
-
-  pros::delay(1200);
-
-  bigRed();
+  switch (startingPosition) {
+    case BIG_RED:
+      bigRed();
+      break;
+    case BIG_BLUE:
+      bigBlue();
+      break;
+  }
 }
