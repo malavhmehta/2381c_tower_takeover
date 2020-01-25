@@ -1,5 +1,5 @@
 /*
- * Created by: Team 2381C
+ * Created by: Team 2381C (Colonel By Secondary School)
  * For:        VEX VRC Competition (Tower Takeover) 2019-2020
  * On:         January 25, 2020 (for Terrebonne Competition)
  * 
@@ -278,10 +278,10 @@ void towerMacros()
 
   pros::delay(50);
 
-  //infinite while loop which continually updates the position of the goofy arm motor
+  // While-Loop which updates the position of the goofy arm motor.
   while (true)
   {
-    //conditional statement checks whether the button is being pressed or not
+    // Conditional statement checks whether the button is being pressed or not.
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
     {
       if (mode > 2)
@@ -301,7 +301,7 @@ void towerMacros()
       // lift.move_velocity(-30);
       pros::delay(20);
 
-      //this conditional statement forces the transmission angler to move to an exact position of 397 ticks
+      // Forces the transmission angler to move to an exact position of 397 ticks.
       if (rightBack.get_position() < 397)
       {
         leftFront.move(-30);
@@ -341,26 +341,26 @@ void opcontrol()
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
 
-    // Split acrade controls that control the drive base
+    // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     center.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
 
-    // Keeping the motors at move_velocity(0) keeps the motor position locked
+    // Keeping the motors at move_velocity(0) keeps the motor position locked.
     leftIntake.move_velocity(0);
     rightIntake.move_velocity(-0);
     leftIntake.move_velocity(-0);
     rightIntake.move_velocity(0);
 
-    // brake_bold keeps the motors in brake mode so the motors will actively resist movement, are locked in position
+    // brake_bold keeps the motors in brake mode so the motors will actively resist movement, are locked in position.
     leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-    // Shift buttons R1 (for tray tilt) and R2 (for goofy arm)
+    // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
     {
       if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
@@ -379,7 +379,7 @@ void opcontrol()
       lift.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
     }
 
-    // Intake controls using the L2 and L1 buttons
+    // Intake controls using the L2 and L1 buttons.
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
     {
       leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -403,7 +403,7 @@ void opcontrol()
 		 * unless a different position is required (either due to driver control or in the auton sequence).
 		 */
 
-    // Driver control and macros for the grippy arm
+    // Driver control and macros for the grippy arm.
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
     {
       center.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -435,13 +435,13 @@ void opcontrol()
       center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     }
 
-    // Tower Macros
+    // Tower Macros.
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
     {
       tower_counter++;
     }
 
-    // Even numbers will toggle a separate macro using the A button
+    // Even numbers will toggle a separate macro using the A button.
     if (tower_counter % 2 != 0)
     {
       macroEnabled = !macroEnabled;
@@ -452,7 +452,7 @@ void opcontrol()
       pros::lcd::set_text(7, "The button has not been toggled");
     }
 
-    // Setting a conditional statement which will call the macro function for the small and medium towers
+    // Setting a conditional statement which will call the macro function for the small and medium towers.
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && macroEnabled)
     {
       mode++;
@@ -461,12 +461,12 @@ void opcontrol()
   }
 }
 
-// Deploy function which will be called in autonomous to extend the tray of the robot
+// Deploy function which will be called in autonomous to extend the tray of the robot.
 void deploy()
 {
 }
 
-// Stops the drivebase by setting all motors to 0 velocity;
+// Stops the drivebase by setting all motors to 0 velocity.
 void stopDrivebase()
 {
   moveRobotManual(FORWARD, 100, 0);
@@ -505,7 +505,7 @@ void bigRed()
 
   rightIntake.move(0);
   leftIntake.move(0);
-  
+
   // Drive away from the goal zone.
   moveRobotManual(REVERSE, 2000, 60);
   stopDrivebase();
@@ -517,91 +517,51 @@ void bigRed()
  */
 void bigBlue()
 {
-  leftBack.move(-60);
-  leftFront.move(60);
-  rightBack.move(60);
-  rightFront.move(-60);
-
+  // Intake the first cube.
   rightIntake.move(-186 / 2);
   leftIntake.move(186 / 2);
+  moveRobotManual(FORWARD, 1200, 60);
 
-  pros::delay(1200);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
+  stopDrivebase();
   rightIntake.move(0);
   leftIntake.move(0);
 
-  leftBack.move_velocity(60);
-  leftFront.move_velocity(-60);
-  rightBack.move_velocity(-60);
-  rightFront.move_velocity(60);
+  // Move the robot backwards.
+  moveRobotManual(REVERSE, 800, 60);
+  stopDrivebase();
 
-  pros::delay(800);
+  // Turn the robot towards the goal zone (RIGHT).
+  moveRobotManual(RIGHT, 650, 70);
+  stopDrivebase();
 
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
+  // Move the robot all the way towards the goal zone.
+  moveRobotManual(FORWARD, 1300, 60);
 
-  pros::delay(20);
-
-  leftBack.move(-70);
-  leftFront.move(70);
-  rightBack.move(-70);
-  rightFront.move(70);
-
-  pros::delay(650);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-  pros::delay(20);
-  leftBack.move(-60);
-  leftFront.move(60);
-  rightBack.move(60);
-  rightFront.move(-60);
-
-  pros::delay(1300);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
+  // Outtake the cube.
   rightIntake.move(186 / 2);
   leftIntake.move(-186 / 2);
-
-  pros::delay(1500);
+  moveRobotManual(FORWARD, 1500, 0);
 
   rightIntake.move(0);
   leftIntake.move(0);
 
-  leftBack.move(60);
-  leftFront.move(-60);
-  rightBack.move(-60);
-  rightFront.move(60);
-
-  pros::delay(2000);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
+  // Drive away from the goal zone.
+  moveRobotManual(REVERSE, 2000, 60);
+  stopDrivebase();
 }
 
+/**
+ * Initiates the autonomous sequence during a competition match.
+ */
 void autonomous()
 {
-  switch (startingPosition) {
-    case BIG_RED:
-      bigRed();
-      break;
-    case BIG_BLUE:
-      bigBlue();
-      break;
+  switch (startingPosition)
+  {
+  case BIG_RED:
+    bigRed();
+    break;
+  case BIG_BLUE:
+    bigBlue();
+    break;
   }
 }
