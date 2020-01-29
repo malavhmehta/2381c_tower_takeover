@@ -41,7 +41,7 @@ pros::ADIAnalogIn gyro('H');
 int delay = 20;
 
 // Defining PID Params for the angler and the drivebase.
-std::array<double, 3> anglerPIDParams = {0.04 * 4, 0.000555 * 4, 0.7 * 3.5};
+std::array<double, 3> anglerPIDParams = {0.06, 0, 0};
 std::array<double, 3> drivebasePIDParams = {0.3, 0, 0};
 
 // Initializing the PIDs using the above paramenters, by calling the PID class.
@@ -105,7 +105,12 @@ void autonStack()
 {
   while (true)
   {
-    double movFactor = anglerPIDController->update(-720, rightBack.get_position());
+    
+    
+    double movFactor = anglerPIDController->update(1400, rightBack.get_position());
+
+    pros::lcd::set_text(1, "Motor position: " + std::to_string(rightBack.get_position()));
+    pros::lcd::set_text(2, "Motor speed: " + std::to_string(movFactor));
 
     // Using the transmission for the stacking of cubes.
     leftFront.move(-movFactor);
@@ -115,15 +120,64 @@ void autonStack()
 
     // Checking for the sentinel value (using the motor's encoder values) to determine if the operation
     // has been completed.
-    if (abs(rightBack.get_position() + 730) < 20)
+    if (rightBack.get_position() > 1200) 
     {
-      rightBack.tare_position();
+      leftFront.move(0);
+      leftBack.move(0);
+      rightFront.move(0);
+      rightBack.move(0);
+      // rightBack.tare_position();
       break;
     }
 
     // Delay as to not overload the motor.
     pros::delay(delay);
   }
+  
+  leftFront.move(20);
+  leftBack.move(20);
+  rightFront.move(-20);
+  rightBack.move(-20);
+
+  pros::delay(500);
+
+  leftFront.move(0);
+  leftBack.move(0);
+  rightFront.move(0);
+  rightBack.move(0);
+
+
+  pros::delay(2000);
+
+  leftFront.move(10);
+  leftBack.move(10);
+  rightFront.move(-10);
+  rightBack.move(-10);
+
+  pros::delay(800);
+
+  leftFront.move(0);
+  leftBack.move(0);
+  rightFront.move(0);
+  rightBack.move(0);
+
+  leftFront.move(50);
+  leftBack.move(-50);
+  rightFront.move(-50);
+  rightBack.move(50);
+
+  leftIntake.move(-80);
+  rightIntake.move(80);
+
+  pros::delay(1000);
+
+  leftFront.move(0);
+  leftBack.move(0);
+  rightFront.move(0);
+  rightBack.move(0);
+
+  leftIntake.move(0);
+  rightIntake.move(0);
 }
 
 /**
@@ -270,57 +324,11 @@ int mode = 0;
  * then raises the goofy arm to the required level as specified by the driver. The competitive
  * advantage of this function is that it ensures reliability during a competition match.
  */
-void towerMacros()
-{
-  // The different encoder values for each tower.
-  double small_val = -1900;
-  double mid_val = -2280;
-
-  pros::delay(50);
-
-  // While-Loop which updates the position of the goofy arm motor.
-  while (true)
-  {
-    // Conditional statement checks whether the button is being pressed or not.
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
-    {
-      if (mode > 2)
-      {
-        mode = 0;
-        break;
-      }
-    }
-
-    /*
-     * Conditional statement that tells the goofy arm motor which position to move to. 
-     *    (1) When the mode is equivalent to 1, the goofy arm will raise itself to the height of the smaller tower.
-     *    (2) When the mode is equivalent to 2, the goofy arm will raise itself to the height of the medium tower.
-     */
-    if ((mode == 1 && lift.get_position() > small_val) || (mode == 2 && lift.get_position() > mid_val))
-    {
-      // lift.move_velocity(-30);
-      pros::delay(20);
-
-      // Forces the transmission angler to move to an exact position of 397 ticks.
-      if (rightBack.get_position() < 397)
-      {
-        leftFront.move(-30);
-        leftBack.move(-30);
-        rightBack.move(30);
-        rightFront.move(30);
-      }
-    }
-    else
-    {
-      break;
-    }
-  }
-}
 
 // Global variable that determines whether the R2 button should act as a 'SHIFT' key or
 // as the controller for the Goofy Arm macros.
 int tower_counter = 0;
-
+int origin = 0;
 /**
  * Primary function containing the necessary code for the driver to drive and maneuver the
  * robot. It also contains the necessary event listeners to trigger the driver's movements
@@ -336,8 +344,6 @@ void opcontrol()
   while (true)
   {
     pros::delay(20);
-    pros::lcd::set_text(2, "Button Counter" + std::to_string(mode));
-    pros::lcd::set_text(3, "A Button " + std::to_string(tower_counter));
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
 
@@ -358,7 +364,7 @@ void opcontrol()
     leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+   
 
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
@@ -376,6 +382,7 @@ void opcontrol()
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
     {
+      lift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       lift.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
     }
 
@@ -392,8 +399,8 @@ void opcontrol()
     {
       leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      leftIntake.move_velocity(-200);
-      rightIntake.move_velocity(200);
+      leftIntake.move_velocity(-80);
+      rightIntake.move_velocity(80);
       pros::delay(20);
     }
 
@@ -404,66 +411,162 @@ void opcontrol()
 		 */
 
     // Driver control and macros for the grippy arm.
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
-    {
-      center.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      center.move_velocity(50);
-    }
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-    {
-      center.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      center.move_velocity(-50);
-    }
 
     pros::delay(20);
 
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
-    {
-      center.move(50);
-    }
-    else
-    {
-      center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    }
-
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
-    {
-      center.move(-50);
-    }
-    else
-    {
-      center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    }
-
     // Tower Macros.
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
-    {
-      tower_counter++;
+    int control;
+    //digital down buttons control the different tower heights 
+    // if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+    //   if(lift.get_position() != -330) {
+    //     if(lift.get_position() < -360) {
+    //       lift.move(30);
+    //     }
+        
+    //     if(lift.get_position() > -300) {
+    //       lift.move(-30);
+    //     }
+        
+    //     if(lift.get_position() > -360 && lift.get_position() < -300) {
+    //       lift.move(0);
+    //     }
+        
+    //   }
+      
+    // }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+      autonStack;
     }
 
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+      control = 0;
+    }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+      control = 1;
+      rightBack.tare_position();
+      origin = rightBack.get_position();
+    }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
+      control = 2;
+      rightBack.tare_position();
+      origin = rightBack.get_position();
+    }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+        control = 3;
+        rightBack.tare_position();
+        origin = rightBack.get_position();
+      }    
+
+    pros::lcd::set_text(6, "origin" + std::to_string(origin));
+     pros::lcd::set_text(8, "Motor Temperature:" + std::to_string(lift.get_temperature()));
     // Even numbers will toggle a separate macro using the A button.
-    if (tower_counter % 2 != 0)
-    {
-      macroEnabled = !macroEnabled;
-      pros::lcd::set_text(7, "The button has been toggled");
-    }
-    else
-    {
-      pros::lcd::set_text(7, "The button has not been toggled");
-    }
+    pros::lcd::set_text(7, "Control: " + std::to_string(control));
 
-    // Setting a conditional statement which will call the macro function for the small and medium towers.
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) && macroEnabled)
-    {
-      mode++;
-      towerMacros();
+    if(control != 1 && control != 2) {
+       lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     }
+      if(control == 1) {
+
+          if(lift.get_position() > -1900) {
+           
+            lift.move(-120);
+          }
+          else {
+             lift.move(-5);
+             control = 4;
+          }
+         
+          if(rightBack.get_position() < origin + 415) {
+            leftFront.move(-70);
+            leftBack.move(-70);
+            rightFront.move(70);
+            rightBack.move(70);
+          }
+          
+
+        }
+        else if(control == 2) {
+          if(lift.get_position() > -2400) {
+            lift.move(-120);
+          }
+          else {
+            lift.move(-5);
+            control = 4;
+          }
+
+          
+          if(rightBack.get_position() < 415) {
+            leftFront.move(-70);
+            leftBack.move(-70);
+            rightFront.move(70);
+            rightBack.move(70);
+          }
+          else {
+            if(rightBack.get_position() < 415) {
+              leftFront.move(0);
+              leftBack.move(0);
+              rightFront.move(0);
+              rightBack.move(0);
+            }
+          }
+        }
+        else if(control == 3) {
+          if(lift.get_position() < 30) {
+            lift.move(40); 
+          }
+          else {
+            lift.move(0);
+            control = 3;
+          }
+
+           if(rightBack.get_position() > origin - 150) {
+            leftFront.move(10);
+            leftBack.move(10);
+            rightFront.move(-10);
+            rightBack.move(-10);
+          }
+          else {
+            leftFront.move(0);
+            leftBack.move(0);
+            rightFront.move(0);
+            rightBack.move(0);
+            control = 4;
+          }
+        }
+    
+    
   }
-}
+
+  pros::delay(50);
+
+  }
 
 // Deploy function which will be called in autonomous to extend the tray of the robot.
 void deploy()
 {
+  lift.move(-70);
+  pros::delay(1600);
+  lift.move(0);
+
+  rightIntake.move(100);
+  leftIntake.move(-100);
+  pros::delay(500);
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftFront.move(-30);
+  leftBack.move(-30);
+  rightBack.move(30);
+  rightFront.move(30);
+  pros::delay(500);
+  leftFront.move(0);
+  leftBack.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
 }
 
 // Stops the drivebase by setting all motors to 0 velocity.
@@ -476,6 +579,174 @@ void stopDrivebase()
  * Defines the drivepath for the big red goal zone. The motion are currently manually
  * profiled using the 'moveRobotManual' function.
  */
+
+void cancerBigRed() {
+  leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  rightIntake.move(-186);
+  leftIntake.move(186);
+
+  pros::delay(1200);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move_velocity(-60);
+  leftFront.move_velocity(60);
+  rightBack.move_velocity(60);
+  rightFront.move_velocity(-60);
+
+  pros::delay(800);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  pros::delay(20);
+
+  leftBack.move(-70);
+  leftFront.move(70);
+  rightBack.move(-70);
+  rightFront.move(70);
+
+  pros::delay(650);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+  pros::delay(20);
+  leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  pros::delay(1300);
+
+	leftBack.move(0);
+	leftFront.move(0);
+	rightBack.move(0);
+	rightFront.move(0);
+
+  rightIntake.move(186);
+  leftIntake.move(-186);
+
+  pros::delay(1500);
+
+
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move(-60);
+  leftFront.move(60);
+  rightBack.move(60);
+  rightFront.move(-60);
+
+  pros::delay(2000);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+}
+
+void attemptStack() {
+   leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  rightIntake.move(-186);
+  leftIntake.move(186);
+
+  pros::delay(1200);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move_velocity(-60);
+  leftFront.move_velocity(60);
+  rightBack.move_velocity(60);
+  rightFront.move_velocity(-60);
+
+  pros::delay(800);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  pros::delay(20);
+
+  leftBack.move(-70);
+  leftFront.move(70);
+  rightBack.move(-70);
+  rightFront.move(70);
+
+  pros::delay(650);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+  pros::delay(20);
+  
+  leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  pros::delay(1300);
+
+	leftBack.move(0);
+	leftFront.move(0);
+	rightBack.move(0);
+	rightFront.move(0);
+
+  leftFront.move(-30);
+  leftBack.move(-30);
+  rightBack.move(30);
+  rightFront.move(30);
+
+  pros::delay(1000);
+
+  leftBack.move(0);
+	leftFront.move(0);
+	rightBack.move(0);
+	rightFront.move(0);
+
+
+  leftBack.move(-60);
+  leftFront.move(60);
+  rightBack.move(60);
+  rightFront.move(-60);
+
+  pros::delay(2000);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+  
+ 
+}
+
 void bigRed()
 {
   // Intake the first cube.
@@ -555,13 +826,18 @@ void bigBlue()
  */
 void autonomous()
 {
-  switch (startingPosition)
-  {
-  case BIG_RED:
-    bigRed();
-    break;
-  case BIG_BLUE:
-    bigBlue();
-    break;
-  }
+
+  autonStack();
+
+  // pros::delay(2000);
+
+  // switch (startingPosition)
+  // {
+  // case BIG_RED:
+  //   cancerBigRed();
+  //   break;
+  // case BIG_BLUE:
+  //   bigBlue();
+  //   break;
+  // }
 }
