@@ -416,25 +416,7 @@ void opcontrol()
 
     // Tower Macros.
     int control;
-    //digital down buttons control the different tower heights 
-    // if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-    //   if(lift.get_position() != -330) {
-    //     if(lift.get_position() < -360) {
-    //       lift.move(30);
-    //     }
-        
-    //     if(lift.get_position() > -300) {
-    //       lift.move(-30);
-    //     }
-        
-    //     if(lift.get_position() > -360 && lift.get_position() < -300) {
-    //       lift.move(0);
-    //     }
-        
-    //   }
-      
-    // }
-
+    
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
       autonStack;
     }

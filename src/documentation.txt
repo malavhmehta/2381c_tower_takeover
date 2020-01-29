@@ -1,0 +1,60 @@
+Basic Documentation of 2019 - 2020 Tower Takeover Code
+    *this document should be continually updated based on substantial code implementations
+
+Driving Directions 
+    How to Drive Forward 
+        leftBack.move(+);
+        leftFront.move(-);
+        rightBack.move(-);
+        rightFront.move(+);
+
+    How to Drive Backwards 
+        leftBack.move(+);
+        leftFront.move(-);
+        rightBack.move(-);
+        rightFront.move(+);
+
+    How to Turn Left 
+        leftBack.move(-);
+        leftFront.move(+);
+        rightBack.move(-);
+        rightFront.move(+);
+    
+    How to Turn Right 
+        leftBack.move(+);
+        leftFront.move(-);
+        rightBack.move(+);
+        rightFront.move(-);
+
+Goofy Tower Macros 
+    There are 3 buttons for goofy tower macros
+        left_digital triggers the small tower macro
+        right_digital triggers the medium tower macro
+        down_digital resets the transmission and goofy arm 
+    
+    The Basic Program Structure for Macros 
+        If statements to check when buttons are pressed
+
+        Each if statement has their own condition based off a variable called control, when each button is pressed, 
+        the value of control will change and a different conditional statement will be called whether to do small, 
+        medium towers, or a goofy reset. 
+
+        The encoder values of the goofy arm were recorded at specific heights designated for the small medium towers.
+        The goofy arm is then initiated ad told to stop once it reaches the value.
+
+        Due to the extreme weight of the goofy arm, the motors need to be running at a speed of 5rpm in order to keep
+        the arm still and to counter the weight of the arm. Functions like brake_mode are unable to balance the weight 
+        of the arm and a counter-force is required.
+
+        The goofy arm is lifted through reverse speed and is reset by setting a positive motor speed.
+
+PID Stack
+    R
+
+Drive Functions (Malav)
+
+PID classes 
+
+Odometry 
+
+
