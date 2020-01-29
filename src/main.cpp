@@ -253,8 +253,8 @@ void moveRobot(double encoderValue, DIRECTION direction)
   switch (direction)
   {
   case FORWARD:
-    cofLB = -1;
-    cofRF = -1;
+    cofRB = -1;
+    cofLF = -1;
     break;
 
   case REVERSE:
@@ -263,13 +263,13 @@ void moveRobot(double encoderValue, DIRECTION direction)
     break;
 
   case LEFT:
+    cofRB = -1;
     cofLB = -1;
-    cofRF = -1;
     break;
 
   case RIGHT:
-    cofLB = -1;
     cofRF = -1;
+    cofLF = -1;
     break;
   }
 
@@ -416,7 +416,7 @@ void opcontrol()
 
     // Tower Macros.
     int control;
-    
+
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
       autonStack;
     }
