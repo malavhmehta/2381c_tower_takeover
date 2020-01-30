@@ -19,30 +19,8 @@
 #include "pros/api_legacy.h"
 #include <array>
 #include "pid.hpp"
-
-// Defining ports for the Quadratic Encoder (for the tracking of wheel movements).
-#define QUAD_TOP_PORT 1
-#define QUAD_BOTTOM_PORT 2
-
-// Declaring and initizalizing required motors and analog sensors.
-pros::Controller master(pros::E_CONTROLLER_MASTER);
-pros::Motor leftBack(12);
-pros::Motor leftFront(11);
-pros::Motor rightBack(19);
-pros::Motor rightFront(20);
-pros::Motor leftIntake(18);
-pros::Motor rightIntake(13);
-pros::Motor lift(14);
-pros::Motor center(16);
-pros::ADIEncoder encoder(QUAD_TOP_PORT, QUAD_BOTTOM_PORT, false);
-pros::ADIAnalogIn gyro('H');
-
-// Global and constant delay.
-int delay = 20;
-
-// Defining PID Params for the angler and the drivebase.
-std::array<double, 3> anglerPIDParams = {0.06, 0, 0};
-std::array<double, 3> drivebasePIDParams = {0.3, 0, 0};
+#include "definitions.hpp"
+#include "Autonomous Code/compAuton.cpp"
 
 // Initializing the PIDs using the above paramenters, by calling the PID class.
 PID *anglerPIDController = new PID(
@@ -67,7 +45,9 @@ enum DIRECTION
   LEFT_FORWARD,
   LEFT_BACK,
   RIGHT_FORWARD,
-  RIGHT_BACK
+  RIGHT_BACK,
+  TRANS_UP,
+  TRANS_DOWN
 };
 
 // Possible starting POSITION for the AUTONOMOUS sequence.
@@ -101,84 +81,7 @@ AUTON_POS startingPosition = BIG_RED;
  * is received from the angler PID controller, which is then passed into each motor, and the motors
  * are then moved accordingly.
  */
-void autonStack()
-{
-  while (true)
-  {
-    
-    
-    double movFactor = anglerPIDController->update(1400, rightBack.get_position());
 
-    pros::lcd::set_text(1, "Motor position: " + std::to_string(rightBack.get_position()));
-    pros::lcd::set_text(2, "Motor speed: " + std::to_string(movFactor));
-
-    // Using the transmission for the stacking of cubes.
-    leftFront.move(-movFactor);
-    leftBack.move(-movFactor);
-    rightFront.move(movFactor);
-    rightBack.move(movFactor);
-
-    // Checking for the sentinel value (using the motor's encoder values) to determine if the operation
-    // has been completed.
-    if (rightBack.get_position() > 1200) 
-    {
-      leftFront.move(0);
-      leftBack.move(0);
-      rightFront.move(0);
-      rightBack.move(0);
-      // rightBack.tare_position();
-      break;
-    }
-
-    // Delay as to not overload the motor.
-    pros::delay(delay);
-  }
-  
-  leftFront.move(20);
-  leftBack.move(20);
-  rightFront.move(-20);
-  rightBack.move(-20);
-
-  pros::delay(500);
-
-  leftFront.move(0);
-  leftBack.move(0);
-  rightFront.move(0);
-  rightBack.move(0);
-
-
-  pros::delay(2000);
-
-  leftFront.move(10);
-  leftBack.move(10);
-  rightFront.move(-10);
-  rightBack.move(-10);
-
-  pros::delay(800);
-
-  leftFront.move(0);
-  leftBack.move(0);
-  rightFront.move(0);
-  rightBack.move(0);
-
-  leftFront.move(50);
-  leftBack.move(-50);
-  rightFront.move(-50);
-  rightBack.move(50);
-
-  leftIntake.move(-80);
-  rightIntake.move(80);
-
-  pros::delay(1000);
-
-  leftFront.move(0);
-  leftBack.move(0);
-  rightFront.move(0);
-  rightBack.move(0);
-
-  leftIntake.move(0);
-  rightIntake.move(0);
-}
 
 /**
  * For the testing of a manual (non-PID) based autonomous drivepath. This function
@@ -191,10 +94,14 @@ void autonStack()
  *                  motion to fully complete, instead of being called instantaneously.
  * @param movFactor determines how much the motors are to be moved.
  */
-void moveRobotManual(DIRECTION direction, int delay, int movFactor)
+
+
+
+void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMove, int intakeSpeed)
 {
   // Motor coefficients for the H-Drive.
   int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
+  int intakeR = 0, intakeL = 0;
 
   // Check the direction, and change the motor coefficient accordingly.
   switch (direction)
@@ -218,7 +125,27 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor)
     cofRF = -1;
     cofLF = -1;
     break;
+  
+  case TRANS_UP:
+    cofLF = -1;
+    cofLB = -1;
+    break;
+
+  case TRANS_DOWN:
+    cofRB = -1;
+    cofRF = -1;
+    break;
   }
+
+  if(intakeMove == 1 && intakeSpeed < 0) {
+    intakeL = -1;
+    intakeR = 1;
+  }
+  else if(intakeMove == 1 && intakeSpeed > 0) {
+    intakeR = -1;
+    intakeL = 1;
+  }
+  
 
   // Move the motors with the movement factor and multiplied by the coefficient which
   // determines whether the movement factor needs to be negative.
@@ -227,6 +154,8 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor)
   rightBack.move(movFactor * cofRB);
   rightFront.move(movFactor * cofRF);
 
+  leftIntake.move(intakeSpeed * intakeL);
+  rightIntake.move(intakeSpeed* intakeR);
   // Delay to ensure that the movement is completed.
   pros::delay(delay);
 }
@@ -244,22 +173,24 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor)
  * @param envoderValue  used to determine how much the robot needs to be moved (by getting
  *                      the motor's position and comparing it to where it needs to be).
  */
-void moveRobot(double encoderValue, DIRECTION direction)
+void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int intakeSpeed)
 {
+  
+  //rightBack.tare_position();
   // Motor coefficients for the H-Drive.
   int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
-
+  int intakeR = 0, intakeL = 0;
   // Check the direction, and change the motor coefficient accordingly.
-  switch (direction)
-  {
+  
+  switch(direction) {
   case FORWARD:
     cofRB = -1;
     cofLF = -1;
     break;
 
   case REVERSE:
-    cofLB = -1;
     cofRF = -1;
+    cofLB = -1;
     break;
 
   case LEFT:
@@ -271,26 +202,137 @@ void moveRobot(double encoderValue, DIRECTION direction)
     cofRF = -1;
     cofLF = -1;
     break;
+  
+  case TRANS_UP:
+    cofLF = -1;
+    cofLB = -1;
+    break;
+
+  case TRANS_DOWN:
+    cofRB = -1;
+    cofRF = -1;
+    break;
+  }
+  
+  if(intakeMove == 1 && intakeSpeed < 0) {
+    intakeL = -1;
+    intakeR = 1;
+  }
+  else if(intakeMove == 1 && intakeSpeed > 0) {
+    intakeR = -1;
+    intakeL = 1;
   }
 
   while (true)
   {
-    double movFactor = drivebasePIDController->update(encoderValue, rightBack.get_position());
+    double movFactor = drivebasePIDController->update(abs(encoderValue), abs(rightBack.get_position()));
 
-    leftBack.move(movFactor * cofLB);
-    leftFront.move(movFactor * cofLF);
-    rightBack.move(movFactor * cofRB);
-    rightFront.move(movFactor * cofRF);
+    double adjustment;
+    
+    if(encoderValue < 0) {
+      adjustment = movFactor;
+    }
+    else {
+      adjustment = movFactor*-1;
+    }
 
-    if (abs(rightBack.get_position() + 730) < 20)
+    pros::lcd::set_text(2, std::to_string(movFactor));
+
+    
+    leftBack.move(adjustment * cofLB);
+    leftFront.move(adjustment * cofLF);
+    rightBack.move(adjustment * cofRB);
+    rightFront.move(adjustment * cofRF);
+
+    leftIntake.move(intakeSpeed * intakeL);
+    rightIntake.move(intakeSpeed* intakeR);
+
+   
+      if (rightBack.get_position() < encoderValue + 100)
+      {
+        pros::lcd::set_text(5, "Hi");
+        
+        rightBack.tare_position();
+
+        leftFront.move(0);
+        leftBack.move(0);
+        rightFront.move(0);
+        rightBack.move(0);
+
+        pros::delay(20);
+        return;
+      }
+    
+    // else {
+    //   if (rightBack.get_position() > encoderValue - 300)
+    //   {
+    //     pros::lcd::set_text(1, "Hi");
+    //     adjustment = 0;
+    //     break;
+    //   }
+    // }
+
+    pros::lcd::set_text(1, std::to_string(rightBack.get_position()));
+    pros::lcd::set_text(2, std::to_string(movFactor));
+     pros::lcd::set_text(3, std::to_string(encoderValue));
+    pros::delay(delay);
+  }
+
+  leftFront.move(0);
+  leftBack.move(0);
+  rightFront.move(0);
+  rightBack.move(0);
+
+
+}
+
+// Stops the drivebase by setting all motors to 0 velocity.
+void stopDrivebase()
+{
+  moveRobotManual(FORWARD, 100, 0, 0, 0);
+}
+
+void autonStack(double origin)
+{
+  while (true)
+  {
+   
+    double movFactor = anglerPIDController->update(origin + 1400, rightBack.get_position());
+    
+    pros::lcd::set_text(1, "Motor position: " + std::to_string(rightBack.get_position()));
+    pros::lcd::set_text(2, "Motor speed: " + std::to_string(movFactor));
+
+    // Using the transmission for the stacking of cubes.
+    leftFront.move(-movFactor);
+    leftBack.move(-movFactor);
+    rightFront.move(movFactor);
+    rightBack.move(movFactor);
+
+    // Checking for the sentinel value (using the motor's encoder values) to determine if the operation
+    // has been completed.
+    if (rightBack.get_position() > 1200) 
     {
+      leftFront.move(0);
+      leftBack.move(0);
+      rightFront.move(0);
+      rightBack.move(0);
       rightBack.tare_position();
       break;
     }
 
+    // Delay as to not overload the motor.
     pros::delay(delay);
   }
+  
+  pros::delay(2000);
+
+  moveRobotManual(TRANS_DOWN, 500, 20, 0, 0);
+  stopDrivebase();
+  moveRobotManual(REVERSE, 1000, 50, 1, -80);
+  stopDrivebase();
+
 }
+
 
 /**
  * Called at the initialization of the competition. Turns on the brain's LCD.
@@ -302,44 +344,12 @@ void initialize()
 }
 
 /**
- * Pre-built disabled function required for the competition.
- */
-void disabled()
-{
-}
-
-/**
- * Required competition-specific initialize code.
- */
-void competition_initalize()
-{
-}
-
-// Global variable that determines the mode for the goofy arm macros (the extent to which the goofy
-// arms needs to be raised).
-int mode = 0;
-
-/**
- * This function is a macro for the raising of the foody arms. Essentially, it takes in the mode and
- * then raises the goofy arm to the required level as specified by the driver. The competitive
- * advantage of this function is that it ensures reliability during a competition match.
- */
-
-// Global variable that determines whether the R2 button should act as a 'SHIFT' key or
-// as the controller for the Goofy Arm macros.
-int tower_counter = 0;
-int origin = 0;
-/**
  * Primary function containing the necessary code for the driver to drive and maneuver the
  * robot. It also contains the necessary event listeners to trigger the driver's movements
  * and enable macros as requested.
  */
 void opcontrol()
 {
-  bool holdMove;
-  bool macroEnabled = false;
-
-  int hit = 0;
 
   while (true)
   {
@@ -418,7 +428,9 @@ void opcontrol()
     int control;
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-      autonStack;
+      rightBack.tare_position();
+      origin = rightBack.get_position();
+      autonStack(origin);
     }
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
@@ -527,240 +539,60 @@ void opcontrol()
 
   }
 
-// Deploy function which will be called in autonomous to extend the tray of the robot.
-void deploy()
-{
-  lift.move(-70);
-  pros::delay(1600);
-  lift.move(0);
+//Drive base Autonomous
 
-  rightIntake.move(100);
-  leftIntake.move(-100);
-  pros::delay(500);
-  rightIntake.move(0);
-  leftIntake.move(0);
-
-  leftFront.move(-30);
-  leftBack.move(-30);
-  rightBack.move(30);
-  rightFront.move(30);
-  pros::delay(500);
-  leftFront.move(0);
-  leftBack.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
+void test() {
+  while(true) {
+    pros::lcd::set_text(1, "Hello");
+  }
 }
 
-// Stops the drivebase by setting all motors to 0 velocity.
-void stopDrivebase()
-{
-  moveRobotManual(FORWARD, 100, 0);
+void autonTest() {
+  moveRobot(-1820, FORWARD, 0, 0);
+
+  test();
 }
+
+
+
+
+
+
 
 /**
  * Defines the drivepath for the big red goal zone. The motion are currently manually
  * profiled using the 'moveRobotManual' function.
  */
 
-void cancerBigRed() {
-  leftBack.move(60);
-  leftFront.move(-60);
-  rightBack.move(-60);
-  rightFront.move(60);
-
-  rightIntake.move(-186);
-  leftIntake.move(186);
-
-  pros::delay(1200);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  rightIntake.move(0);
-  leftIntake.move(0);
-
-  leftBack.move_velocity(-60);
-  leftFront.move_velocity(60);
-  rightBack.move_velocity(60);
-  rightFront.move_velocity(-60);
-
-  pros::delay(800);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  pros::delay(20);
-
-  leftBack.move(-70);
-  leftFront.move(70);
-  rightBack.move(-70);
-  rightFront.move(70);
-
-  pros::delay(650);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-  pros::delay(20);
-  leftBack.move(60);
-  leftFront.move(-60);
-  rightBack.move(-60);
-  rightFront.move(60);
-
-  pros::delay(1300);
-
-	leftBack.move(0);
-	leftFront.move(0);
-	rightBack.move(0);
-	rightFront.move(0);
-
-  rightIntake.move(186);
-  leftIntake.move(-186);
-
-  pros::delay(1500);
-
-
-
-  rightIntake.move(0);
-  leftIntake.move(0);
-
-  leftBack.move(-60);
-  leftFront.move(60);
-  rightBack.move(60);
-  rightFront.move(-60);
-
-  pros::delay(2000);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-}
-
-void attemptStack() {
-   leftBack.move(60);
-  leftFront.move(-60);
-  rightBack.move(-60);
-  rightFront.move(60);
-
-  rightIntake.move(-186);
-  leftIntake.move(186);
-
-  pros::delay(1200);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  rightIntake.move(0);
-  leftIntake.move(0);
-
-  leftBack.move_velocity(-60);
-  leftFront.move_velocity(60);
-  rightBack.move_velocity(60);
-  rightFront.move_velocity(-60);
-
-  pros::delay(800);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  pros::delay(20);
-
-  leftBack.move(-70);
-  leftFront.move(70);
-  rightBack.move(-70);
-  rightFront.move(70);
-
-  pros::delay(650);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-  pros::delay(20);
-  
-  leftBack.move(60);
-  leftFront.move(-60);
-  rightBack.move(-60);
-  rightFront.move(60);
-
-  pros::delay(1300);
-
-	leftBack.move(0);
-	leftFront.move(0);
-	rightBack.move(0);
-	rightFront.move(0);
-
-  leftFront.move(-30);
-  leftBack.move(-30);
-  rightBack.move(30);
-  rightFront.move(30);
-
-  pros::delay(1000);
-
-  leftBack.move(0);
-	leftFront.move(0);
-	rightBack.move(0);
-	rightFront.move(0);
-
-
-  leftBack.move(-60);
-  leftFront.move(60);
-  rightBack.move(60);
-  rightFront.move(-60);
-
-  pros::delay(2000);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-  
- 
-}
-
 void bigRed()
 {
   // Intake the first cube.
-  rightIntake.move(-186 / 2);
-  leftIntake.move(186 / 2);
-  moveRobotManual(FORWARD, 1200, 60);
+ 
+  moveRobotManual(FORWARD, 1200, 60, 1, 186/2);
 
   stopDrivebase();
   rightIntake.move(0);
   leftIntake.move(0);
 
   // Move the robot backwards.
-  moveRobotManual(REVERSE, 800, 60);
+  moveRobotManual(REVERSE, 800, 60, 0, 0);
   stopDrivebase();
 
   // Turn the robot towards the goal zone (LEFT).
-  moveRobotManual(LEFT, 650, 70);
+  moveRobotManual(LEFT, 650, 70, 0, 0);
   stopDrivebase();
 
   // Move the robot all the way towards the goal zone.
-  moveRobotManual(FORWARD, 1300, 60);
+  moveRobotManual(FORWARD, 1300, 60, 0, 0);
 
-  // Outtake the cube.
-  rightIntake.move(186 / 2);
-  leftIntake.move(-186 / 2);
-  moveRobotManual(FORWARD, 1500, 0);
+  // Outtake the cube
+  moveRobotManual(FORWARD, 1500, 0, 1, -186/2);
 
   rightIntake.move(0);
   leftIntake.move(0);
 
   // Drive away from the goal zone.
-  moveRobotManual(REVERSE, 2000, 60);
+  moveRobotManual(REVERSE, 2000, 60, 0, 0);
   stopDrivebase();
 }
 
@@ -771,55 +603,38 @@ void bigRed()
 void bigBlue()
 {
   // Intake the first cube.
-  rightIntake.move(-186 / 2);
-  leftIntake.move(186 / 2);
-  moveRobotManual(FORWARD, 1200, 60);
+  moveRobotManual(FORWARD, 1200, 60, 1, 186/2);
 
   stopDrivebase();
-  rightIntake.move(0);
-  leftIntake.move(0);
 
   // Move the robot backwards.
-  moveRobotManual(REVERSE, 800, 60);
+  moveRobotManual(REVERSE, 800, 60, 0, 0);
   stopDrivebase();
 
   // Turn the robot towards the goal zone (RIGHT).
-  moveRobotManual(RIGHT, 650, 70);
+  moveRobotManual(RIGHT, 650, 70, 0, 0);
   stopDrivebase();
 
   // Move the robot all the way towards the goal zone.
-  moveRobotManual(FORWARD, 1300, 60);
+  moveRobotManual(FORWARD, 1300, 60, 0, 0);
 
   // Outtake the cube.
-  rightIntake.move(186 / 2);
-  leftIntake.move(-186 / 2);
-  moveRobotManual(FORWARD, 1500, 0);
-
-  rightIntake.move(0);
-  leftIntake.move(0);
+  moveRobotManual(FORWARD, 1500, 0, 1, -186/2);
 
   // Drive away from the goal zone.
-  moveRobotManual(REVERSE, 2000, 60);
+  moveRobotManual(REVERSE, 2000, 60, 0, 0);
   stopDrivebase();
 }
 
-/**
- * Initiates the autonomous sequence during a competition match.
- */
-void autonomous()
-{
 
-  autonStack();
+void autonomous() {
+  deploy();
 
-  // pros::delay(2000);
+  pros::delay(1000);
+  
+  autonTest();
 
-  // switch (startingPosition)
-  // {
-  // case BIG_RED:
-  //   cancerBigRed();
-  //   break;
-  // case BIG_BLUE:
-  //   bigBlue();
-  //   break;
-  // }
+  pros::delay(1000);
+
+  deploy();
 }
