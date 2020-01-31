@@ -138,12 +138,12 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMo
   }
 
   if(intakeMove == 1 && intakeSpeed < 0) {
-    intakeL = -1;
-    intakeR = 1;
+    intakeL = 1;
+    intakeR = -1;
   }
   else if(intakeMove == 1 && intakeSpeed > 0) {
-    intakeR = -1;
-    intakeL = 1;
+    intakeR = 1;
+    intakeL = -1;
   }
   
 
@@ -226,7 +226,6 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
   while (true)
   {
     double movFactor = drivebasePIDController->update(abs(encoderValue), abs(rightBack.get_position()));
-
     double adjustment;
     
     if(encoderValue < 0) {
@@ -260,7 +259,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
         rightBack.move(0);
 
         pros::delay(20);
-        return;
+        break;
       }
     
     // else {
@@ -274,7 +273,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
 
     pros::lcd::set_text(1, std::to_string(rightBack.get_position()));
     pros::lcd::set_text(2, std::to_string(movFactor));
-     pros::lcd::set_text(3, std::to_string(encoderValue));
+    pros::lcd::set_text(3, std::to_string(encoderValue));
     pros::delay(delay);
   }
 
@@ -283,7 +282,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
   rightFront.move(0);
   rightBack.move(0);
 
-
+  return;
 }
 
 // Stops the drivebase by setting all motors to 0 velocity.
@@ -310,7 +309,7 @@ void autonStack(double origin)
 
     // Checking for the sentinel value (using the motor's encoder values) to determine if the operation
     // has been completed.
-    if (rightBack.get_position() > 1200) 
+    if (rightBack.get_position() > 1250) 
     {
       leftFront.move(0);
       leftBack.move(0);
@@ -328,7 +327,7 @@ void autonStack(double origin)
 
   moveRobotManual(TRANS_DOWN, 500, 20, 0, 0);
   stopDrivebase();
-  moveRobotManual(REVERSE, 1000, 50, 1, -80);
+  moveRobotManual(REVERSE, 1000, 40, 1, -80);
   stopDrivebase();
 
 }
@@ -454,11 +453,6 @@ void opcontrol()
         rightBack.tare_position();
         origin = rightBack.get_position();
       }    
-
-    pros::lcd::set_text(6, "origin" + std::to_string(origin));
-     pros::lcd::set_text(8, "Motor Temperature:" + std::to_string(lift.get_temperature()));
-    // Even numbers will toggle a separate macro using the A button.
-    pros::lcd::set_text(7, "Control: " + std::to_string(control));
 
     if(control != 1 && control != 2) {
        lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);

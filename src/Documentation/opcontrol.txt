@@ -1,5 +1,4 @@
-Basic Documentation of 2019 - 2020 Tower Takeover Code
-    *this document should be continually updated based on substantial code implementations
+Tower Takeover 2019 - 2020 Documentation for the Driver Opcontrol
 
 Driving Directions 
     How to Drive Forward 
@@ -47,14 +46,3 @@ Goofy Tower Macros
         of the arm and a counter-force is required.
 
         The goofy arm is lifted through reverse speed and is reset by setting a positive motor speed.
-
-PID Stack
-    R
-
-Drive Functions (Malav)
-
-PID classes 
-
-Odometry 
-
-

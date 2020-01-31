@@ -1,0 +1,11 @@
+Basic Documentation of 2019 - 2020 Tower Takeover Code
+    *this document should be continually updated based on substantial code implementations
+
+Basic Github
+    Repository url: https://github.com/malav-mehta/Tower-Takeover-2019-2020/tree/master
+
+Pull Requests and Merging
+
+Branch Creation
+
+Project Management and Issues
