@@ -29,7 +29,7 @@ int origin = 0;
 int delay = 20;
 
 // Defining PID Params for the angler and the drivebase.
-std::array<double, 3> anglerPIDParams = {0.06, 0, 0};
+std::array<double, 3> anglerPIDParams = {0.08, 0, 0};
 std::array<double, 3> drivebasePIDParams = {0.4, 0, 0};
 
 #endif

@@ -277,10 +277,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     pros::delay(delay);
   }
 
-  leftFront.move(0);
-  leftBack.move(0);
-  rightFront.move(0);
-  rightBack.move(0);
+  stopDrivebase();
 
   return;
 }
@@ -323,7 +320,7 @@ void autonStack(double origin)
     pros::delay(delay);
   }
   
-  pros::delay(2000);
+  pros::delay(1000);
 
   moveRobotManual(TRANS_DOWN, 500, 20, 0, 0);
   stopDrivebase();
@@ -461,7 +458,7 @@ void opcontrol()
 
           if(lift.get_position() > -1900) {
            
-            lift.move(-120);
+            lift.move(-140);
           }
           else {
              lift.move(-5);
@@ -469,17 +466,17 @@ void opcontrol()
           }
          
           if(rightBack.get_position() < origin + 415) {
-            leftFront.move(-70);
-            leftBack.move(-70);
-            rightFront.move(70);
-            rightBack.move(70);
+            leftFront.move(-80);
+            leftBack.move(-80);
+            rightFront.move(80);
+            rightBack.move(80);
           }
           
 
         }
         else if(control == 2) {
           if(lift.get_position() > -2400) {
-            lift.move(-120);
+            lift.move(-140);
           }
           else {
             lift.move(-5);
@@ -488,10 +485,10 @@ void opcontrol()
 
           
           if(rightBack.get_position() < 415) {
-            leftFront.move(-70);
-            leftBack.move(-70);
-            rightFront.move(70);
-            rightBack.move(70);
+            leftFront.move(-80);
+            leftBack.move(-80);
+            rightFront.move(80);
+            rightBack.move(80);
           }
           else {
             if(rightBack.get_position() < 415) {
@@ -511,7 +508,7 @@ void opcontrol()
             control = 3;
           }
 
-           if(rightBack.get_position() > origin - 150) {
+           if(rightBack.get_position() > origin - 75) {
             leftFront.move(10);
             leftBack.move(10);
             rightFront.move(-10);
