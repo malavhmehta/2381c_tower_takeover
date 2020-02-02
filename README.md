@@ -69,7 +69,7 @@ The _basic program structure_ for the macros is as follows:
 
 The **encoder values** of the goofy arm were recorded at the specific heights designated for the small medium towers. The goofy arm is then moved until it reaches the prescribed encoder value.
 
->Due to the extreme weight of the goofy arm, the motors need to be running at a speed of 5rpm in order to keep  it still. Built-in functions, such as `brake_mode` are unable to balance the weight of the arm, so an opposing form is required.
+>Due to the extreme weight of the goofy arm, the motors need to be running at a speed of 5rpm in order to keep  it still. Built-in functions, such as `brake_mode` are unable to balance the weight of the arm, so an opposing force is required.
 
 ## Contributing
 
