@@ -73,7 +73,7 @@ enum TURN
 };
 
 // Define the starting AUTONOMOUS POSITION at the top, which can be changed match after match.
-AUTON_POS startingPosition = BIG_RED;
+AUTON_POS startingPosition = SMALL_RED;
 
 /**
  * Calls the angler PID to stack the cubes. Essentially, this function creates a while loop
@@ -81,7 +81,6 @@ AUTON_POS startingPosition = BIG_RED;
  * is received from the angler PID controller, which is then passed into each motor, and the motors
  * are then moved accordingly.
  */
-
 
 /**
  * For the testing of a manual (non-PID) based autonomous drivepath. This function
@@ -94,8 +93,6 @@ AUTON_POS startingPosition = BIG_RED;
  *                  motion to fully complete, instead of being called instantaneously.
  * @param movFactor determines how much the motors are to be moved.
  */
-
-
 
 void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMove, int intakeSpeed)
 {
@@ -125,7 +122,7 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMo
     cofRF = -1;
     cofLF = -1;
     break;
-  
+
   case TRANS_UP:
     cofLF = -1;
     cofLB = -1;
@@ -137,15 +134,16 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMo
     break;
   }
 
-  if(intakeMove == 1 && intakeSpeed < 0) {
+  if (intakeMove == 1 && intakeSpeed < 0)
+  {
     intakeL = 1;
     intakeR = -1;
   }
-  else if(intakeMove == 1 && intakeSpeed > 0) {
+  else if (intakeMove == 1 && intakeSpeed > 0)
+  {
     intakeR = 1;
     intakeL = -1;
   }
-  
 
   // Move the motors with the movement factor and multiplied by the coefficient which
   // determines whether the movement factor needs to be negative.
@@ -155,7 +153,7 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMo
   rightFront.move(movFactor * cofRF);
 
   leftIntake.move(intakeSpeed * intakeL);
-  rightIntake.move(intakeSpeed* intakeR);
+  rightIntake.move(intakeSpeed * intakeR);
   // Delay to ensure that the movement is completed.
   pros::delay(delay);
 }
@@ -173,16 +171,23 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMo
  * @param envoderValue  used to determine how much the robot needs to be moved (by getting
  *                      the motor's position and comparing it to where it needs to be).
  */
+
+void stopDrivebase()
+{
+  moveRobotManual(FORWARD, 100, 0, 0, 0);
+}
+
 void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int intakeSpeed)
 {
-  
+
   //rightBack.tare_position();
   // Motor coefficients for the H-Drive.
   int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
   int intakeR = 0, intakeL = 0;
   // Check the direction, and change the motor coefficient accordingly.
-  
-  switch(direction) {
+
+  switch (direction)
+  {
   case FORWARD:
     cofRB = -1;
     cofLF = -1;
@@ -202,7 +207,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     cofRF = -1;
     cofLF = -1;
     break;
-  
+
   case TRANS_UP:
     cofLF = -1;
     cofLB = -1;
@@ -213,12 +218,14 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     cofRF = -1;
     break;
   }
-  
-  if(intakeMove == 1 && intakeSpeed < 0) {
+
+  if (intakeMove == 1 && intakeSpeed < 0)
+  {
     intakeL = -1;
     intakeR = 1;
   }
-  else if(intakeMove == 1 && intakeSpeed > 0) {
+  else if (intakeMove == 1 && intakeSpeed > 0)
+  {
     intakeR = -1;
     intakeL = 1;
   }
@@ -227,49 +234,45 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
   {
     double movFactor = drivebasePIDController->update(abs(encoderValue), abs(rightBack.get_position()));
     double adjustment;
-    
-    if(encoderValue < 0) {
+
+    if(movFactor > 80) {
+      movFactor = 55;
+    }
+
+    if (encoderValue < 0)
+    {
       adjustment = movFactor;
     }
-    else {
-      adjustment = movFactor*-1;
+    else
+    {
+      adjustment = movFactor * -1;
     }
+
 
     pros::lcd::set_text(2, std::to_string(movFactor));
 
-    
     leftBack.move(adjustment * cofLB);
     leftFront.move(adjustment * cofLF);
     rightBack.move(adjustment * cofRB);
     rightFront.move(adjustment * cofRF);
 
     leftIntake.move(intakeSpeed * intakeL);
-    rightIntake.move(intakeSpeed* intakeR);
+    rightIntake.move(intakeSpeed * intakeR);
 
-   
-      if (rightBack.get_position() < encoderValue + 100)
-      {
-        pros::lcd::set_text(5, "Hi");
-        
-        rightBack.tare_position();
+    if (rightBack.get_position() - 1100 < encoderValue)
+    {
+      pros::lcd::set_text(5, "Hi");
 
-        leftFront.move(0);
-        leftBack.move(0);
-        rightFront.move(0);
-        rightBack.move(0);
+      rightBack.tare_position();
 
-        pros::delay(20);
-        break;
-      }
-    
-    // else {
-    //   if (rightBack.get_position() > encoderValue - 300)
-    //   {
-    //     pros::lcd::set_text(1, "Hi");
-    //     adjustment = 0;
-    //     break;
-    //   }
-    // }
+      leftFront.move(0);
+      leftBack.move(0);
+      rightFront.move(0);
+      rightBack.move(0);
+
+      pros::delay(20);
+      return;
+    }
 
     pros::lcd::set_text(1, std::to_string(rightBack.get_position()));
     pros::lcd::set_text(2, std::to_string(movFactor));
@@ -277,24 +280,19 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     pros::delay(delay);
   }
 
-  stopDrivebase();
-
-  return;
 }
 
-// Stops the drivebase by setting all motors to 0 velocity.
-void stopDrivebase()
+void autonStack(double reset)
 {
-  moveRobotManual(FORWARD, 100, 0, 0, 0);
-}
-
-void autonStack(double origin)
-{
+  pros::delay(500);
+  
+  //rightBack.tare_position();
+  
   while (true)
   {
-   
-    double movFactor = anglerPIDController->update(origin + 1400, rightBack.get_position());
-    
+
+    double movFactor = anglerPIDController->update(reset + 1400, rightBack.get_position());
+
     pros::lcd::set_text(1, "Motor position: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(2, "Motor speed: " + std::to_string(movFactor));
 
@@ -306,7 +304,7 @@ void autonStack(double origin)
 
     // Checking for the sentinel value (using the motor's encoder values) to determine if the operation
     // has been completed.
-    if (rightBack.get_position() > 1250) 
+    if (rightBack.get_position() > 1280)
     {
       leftFront.move(0);
       leftBack.move(0);
@@ -319,16 +317,14 @@ void autonStack(double origin)
     // Delay as to not overload the motor.
     pros::delay(delay);
   }
-  
+
   pros::delay(1000);
 
   moveRobotManual(TRANS_DOWN, 500, 20, 0, 0);
   stopDrivebase();
   moveRobotManual(REVERSE, 1000, 40, 1, -80);
   stopDrivebase();
-
 }
-
 
 /**
  * Called at the initialization of the competition. Turns on the brain's LCD.
@@ -370,7 +366,6 @@ void opcontrol()
     leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-   
 
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
@@ -423,132 +418,169 @@ void opcontrol()
     // Tower Macros.
     int control;
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+    {
       rightBack.tare_position();
       origin = rightBack.get_position();
       autonStack(origin);
     }
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+    {
       control = 0;
     }
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+    {
       control = 1;
       rightBack.tare_position();
       origin = rightBack.get_position();
     }
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+    {
       control = 2;
       rightBack.tare_position();
       origin = rightBack.get_position();
     }
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-        control = 3;
-        rightBack.tare_position();
-        origin = rightBack.get_position();
-      }    
-
-    if(control != 1 && control != 2) {
-       lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
+    {
+      control = 3;
+      rightBack.tare_position();
+      origin = rightBack.get_position();
     }
-      if(control == 1) {
 
-          if(lift.get_position() > -1900) {
-           
-            lift.move(-140);
-          }
-          else {
-             lift.move(-5);
-             control = 4;
-          }
-         
-          if(rightBack.get_position() < origin + 415) {
-            leftFront.move(-80);
-            leftBack.move(-80);
-            rightFront.move(80);
-            rightBack.move(80);
-          }
-          
+    if (control != 1 && control != 2)
+    {
+      lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+    if (control == 1)
+    {
 
+      if (lift.get_position() > -1900)
+      {
+
+        lift.move(-140);
+      }
+      else
+      {
+        lift.move(-5);
+        control = 4;
+      }
+
+      if (rightBack.get_position() < origin + 415)
+      {
+        leftFront.move(-80);
+        leftBack.move(-80);
+        rightFront.move(80);
+        rightBack.move(80);
+      }
+    }
+    else if (control == 2)
+    {
+      if (lift.get_position() > -2400)
+      {
+        lift.move(-140);
+      }
+      else
+      {
+        lift.move(-5);
+        control = 4;
+      }
+
+      if (rightBack.get_position() < 415)
+      {
+        leftFront.move(-80);
+        leftBack.move(-80);
+        rightFront.move(80);
+        rightBack.move(80);
+      }
+      else
+      {
+        if (rightBack.get_position() < 415)
+        {
+          leftFront.move(0);
+          leftBack.move(0);
+          rightFront.move(0);
+          rightBack.move(0);
         }
-        else if(control == 2) {
-          if(lift.get_position() > -2400) {
-            lift.move(-140);
-          }
-          else {
-            lift.move(-5);
-            control = 4;
-          }
+      }
+    }
+    else if (control == 3)
+    {
+      if (lift.get_position() < 30)
+      {
+        lift.move(40);
+      }
+      else
+      {
+        lift.move(0);
+        control = 3;
+      }
 
-          
-          if(rightBack.get_position() < 415) {
-            leftFront.move(-80);
-            leftBack.move(-80);
-            rightFront.move(80);
-            rightBack.move(80);
-          }
-          else {
-            if(rightBack.get_position() < 415) {
-              leftFront.move(0);
-              leftBack.move(0);
-              rightFront.move(0);
-              rightBack.move(0);
-            }
-          }
-        }
-        else if(control == 3) {
-          if(lift.get_position() < 30) {
-            lift.move(40); 
-          }
-          else {
-            lift.move(0);
-            control = 3;
-          }
-
-           if(rightBack.get_position() > origin - 75) {
-            leftFront.move(10);
-            leftBack.move(10);
-            rightFront.move(-10);
-            rightBack.move(-10);
-          }
-          else {
-            leftFront.move(0);
-            leftBack.move(0);
-            rightFront.move(0);
-            rightBack.move(0);
-            control = 4;
-          }
-        }
-    
-    
+      if (rightBack.get_position() > origin - 75)
+      {
+        leftFront.move(10);
+        leftBack.move(10);
+        rightFront.move(-10);
+        rightBack.move(-10);
+      }
+      else
+      {
+        leftFront.move(0);
+        leftBack.move(0);
+        rightFront.move(0);
+        rightBack.move(0);
+        control = 4;
+      }
+    }
   }
 
   pros::delay(50);
-
-  }
-
-//Drive base Autonomous
-
-void test() {
-  while(true) {
-    pros::lcd::set_text(1, "Hello");
-  }
 }
 
-void autonTest() {
-  moveRobot(-1820, FORWARD, 0, 0);
+void smallBlue()
+{
+  moveRobot(-3720, FORWARD, 1, 186 / 2);
 
-  test();
+  // BACK ROBOT AGAINST WALL
+  deploy();
+  
+  moveRobot(0, REVERSE, 0, 0);
+
+  // Move robot **SLIGHTLY** AWAY from the wall
+  moveRobot(0, FORWARD, 0, 0);
+
+  // TURN ROBOT **LEFT**
+  moveRobot(0, LEFT, 0, 0);
+  
+  // MOVE ROBOT TO GOALZONE
+  moveRobot(0, FORWARD, 0, 0);
+
+  // STACK CUBES
+  // autonStack(0);
 }
 
+void smallRed()
+{
+  moveRobot(-3640 - 900, FORWARD, 1, 160);
 
+  // BACK ROBOT AGAINST WALL
+  moveRobot(200 - 900, REVERSE, 0, 0);
 
+  // Move robot **SLIGHTLY** AWAY from the wall
+  moveRobot(0, FORWARD, 0, 0);
 
+  // TURN ROBOT **RIGHT**
+  moveRobot(0, RIGHT, 0, 0);
+  
+  // MOVE ROBOT TO GOALZONE
+  moveRobot(0, FORWARD, 0, 0);
 
-
+  // STACK CUBES
+  // autonStack(rightBack.get_position());
+}
 
 /**
  * Defines the drivepath for the big red goal zone. The motion are currently manually
@@ -558,8 +590,8 @@ void autonTest() {
 void bigRed()
 {
   // Intake the first cube.
- 
-  moveRobotManual(FORWARD, 1200, 60, 1, 186/2);
+
+  moveRobotManual(FORWARD, 1200, 60, 1, 186 / 2);
 
   stopDrivebase();
   rightIntake.move(0);
@@ -577,7 +609,7 @@ void bigRed()
   moveRobotManual(FORWARD, 1300, 60, 0, 0);
 
   // Outtake the cube
-  moveRobotManual(FORWARD, 1500, 0, 1, -186/2);
+  moveRobotManual(FORWARD, 1500, 0, 1, -186 / 2);
 
   rightIntake.move(0);
   leftIntake.move(0);
@@ -594,7 +626,7 @@ void bigRed()
 void bigBlue()
 {
   // Intake the first cube.
-  moveRobotManual(FORWARD, 1200, 60, 1, 186/2);
+  moveRobotManual(FORWARD, 1200, 60, 1, 186 / 2);
 
   stopDrivebase();
 
@@ -610,22 +642,31 @@ void bigBlue()
   moveRobotManual(FORWARD, 1300, 60, 0, 0);
 
   // Outtake the cube.
-  moveRobotManual(FORWARD, 1500, 0, 1, -186/2);
+  moveRobotManual(FORWARD, 1500, 0, 1, -186 / 2);
 
   // Drive away from the goal zone.
   moveRobotManual(REVERSE, 2000, 60, 0, 0);
   stopDrivebase();
 }
 
+void autonomous()
+{
+  //deploy();
+  //pros::delay(1000);
 
-void autonomous() {
-  deploy();
-
-  pros::delay(1000);
-  
-  autonTest();
-
-  pros::delay(1000);
-
-  deploy();
+  switch (startingPosition)
+  {
+  case BIG_RED:
+    bigRed();
+    break;
+  case BIG_BLUE:
+    bigBlue();
+    break;
+  case SMALL_RED:
+    smallRed();
+    break;
+  case SMALL_BLUE:
+    smallBlue();
+    break;
+  }
 }
