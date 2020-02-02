@@ -17,7 +17,7 @@ pros::Motor leftFront(11);
 pros::Motor rightBack(19);
 pros::Motor rightFront(20);
 pros::Motor leftIntake(18);
-pros::Motor rightIntake(13);
+pros::Motor rightIntake(15);
 pros::Motor lift(14);
 pros::Motor center(16);
 pros::ADIEncoder encoder(1, 2, false);
