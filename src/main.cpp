@@ -583,6 +583,7 @@ void opcontrol()
     pros::delay(20);
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
+    pros::lcd::set_text(6, "control variable" + std::to_string(control));
 
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
@@ -603,17 +604,19 @@ void opcontrol()
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
-    {
-      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+    if(toggle%2 == 0) {
+      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
       {
-        leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-        rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+        {
+          leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+          rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        }
+        leftFront.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+        leftBack.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+        rightBack.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+        rightFront.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
       }
-      leftFront.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      leftBack.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      rightBack.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      rightFront.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
     }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
@@ -651,7 +654,36 @@ void opcontrol()
     pros::delay(20);
 
     // Tower Macros.
-    int control;
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+      toggle++;
+    }
+    
+    if(toggle%2 != 0) {
+      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+        control++;
+      }
+      else if(control > 2) {
+        control = 0;
+      }
+    }
+
+    if(control%2 == 0 && !(control == 0)) {
+      if(lift.get_position() < -2200) {
+        lift.move(-140);
+      }
+    }
+    
+    if(control%2 != 0 && !(control == 0)) {
+      if(lift.get_position() < -1900) {
+        lift.move(-140);
+      }
+    }
+
+    if(control == 0) {
+      if(lift.get_position() < -1000) {
+        lift.move(140);
+      }
+    }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
     {
@@ -660,117 +692,6 @@ void opcontrol()
       autonStack(origin);
     }
 
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
-    {
-      control = 0;
-    }
-
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
-    {
-      control = 1;
-      rightBack.tare_position();
-      origin = rightBack.get_position();
-    }
-
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-    {
-      control = 2;
-      rightBack.tare_position();
-      origin = rightBack.get_position();
-    }
-
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
-    {
-      control = 3;
-      rightBack.tare_position();
-      origin = rightBack.get_position();
-    }
-
-    if (control != 1 && control != 2)
-    {
-      lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    }
-    if (control == 1)
-    {
-
-      if (lift.get_position() > -1900)
-      {
-
-        lift.move(-140);
-      }
-      else
-      {
-        lift.move(-5);
-        control = 4;
-      }
-
-      if (rightBack.get_position() < origin + 415)
-      {
-        leftFront.move(-80);
-        leftBack.move(-80);
-        rightFront.move(80);
-        rightBack.move(80);
-      }
-    }
-    else if (control == 2)
-    {
-      if (lift.get_position() > -2400)
-      {
-        lift.move(-140);
-      }
-      else
-      {
-        lift.move(-5);
-        control = 4;
-      }
-
-      if (rightBack.get_position() < 415)
-      {
-        leftFront.move(-80);
-        leftBack.move(-80);
-        rightFront.move(80);
-        rightBack.move(80);
-      }
-      else
-      {
-        if (rightBack.get_position() < 415)
-        {
-          leftFront.move(0);
-          leftBack.move(0);
-          rightFront.move(0);
-          rightBack.move(0);
-        }
-      }
-    }
-    else if (control == 3)
-    {
-      if (lift.get_position() < 30)
-      {
-        lift.move(40);
-      }
-      else
-      {
-        lift.move(0);
-        control = 3;
-      }
-
-      if (rightBack.get_position() > origin - 75)
-      {
-        leftFront.move(10);
-        leftBack.move(10);
-        rightFront.move(-10);
-        rightBack.move(-10);
-      }
-      else
-      {
-        leftFront.move(0);
-        leftBack.move(0);
-        rightFront.move(0);
-        rightBack.move(0);
-        control = 4;
-      }
-    }
+    pros::delay(50);
   }
-
-  pros::delay(50);
 }

@@ -27,6 +27,8 @@ int origin = 0;
 // Global and constant delay.
 int delay = 20;
 
+int control = 0;
+int toggle = 0;
 // Defining PID Params for the angler and the drivebase.
 std::array<double, 3> anglerPIDParams = {0.08, 0, 0};
 std::array<double, 3> drivebasePIDParams = {0.032, 0, 0};
