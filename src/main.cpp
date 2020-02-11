@@ -653,8 +653,16 @@ void opcontrol()
 
     pros::delay(20);
 
-    // Tower Macros.
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+
+    //Tower Macros
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+      cancel++;
+    }
+
+    if(cancel > 0) {
+      toggle = 0;
+    }
+    else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
       toggle++;
     }
     
@@ -671,6 +679,7 @@ void opcontrol()
       if(lift.get_position() < -2200) {
         lift.move(-140);
       }
+
     }
     
     if(control%2 != 0 && !(control == 0)) {
@@ -682,6 +691,9 @@ void opcontrol()
     if(control == 0) {
       if(lift.get_position() < -1000) {
         lift.move(140);
+      }
+      else  {
+        control = 0;
       }
     }
 
