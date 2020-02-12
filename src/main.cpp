@@ -583,7 +583,7 @@ void opcontrol()
     pros::delay(20);
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
-    pros::lcd::set_text(6, "control variable" + std::to_string(control));
+    pros::lcd::set_text(6, "control variable " + std::to_string(toggle));
 
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
@@ -655,19 +655,12 @@ void opcontrol()
 
 
     //Tower Macros
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-      cancel++;
-    }
-
-    if(cancel > 0) {
-      toggle = 0;
-    }
-    else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
       toggle++;
     }
     
     if(toggle%2 != 0) {
-      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
         control++;
       }
       else if(control > 2) {
