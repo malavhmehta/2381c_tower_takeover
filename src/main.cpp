@@ -704,13 +704,6 @@ void opcontrol()
         control = 4;
       }
 
-      if (rightBack.get_position() < origin + 415)
-      {
-        leftFront.move(-80);
-        leftBack.move(-80);
-        rightFront.move(80);
-        rightBack.move(80);
-      }
     }
     else if (control == 2)
     {
@@ -722,24 +715,6 @@ void opcontrol()
       {
         lift.move(-5);
         control = 4;
-      }
-
-      if (rightBack.get_position() < 415)
-      {
-        leftFront.move(-80);
-        leftBack.move(-80);
-        rightFront.move(80);
-        rightBack.move(80);
-      }
-      else
-      {
-        if (rightBack.get_position() < 415)
-        {
-          leftFront.move(0);
-          leftBack.move(0);
-          rightFront.move(0);
-          rightBack.move(0);
-        }
       }
     }
     else if (control == 3)
@@ -754,21 +729,6 @@ void opcontrol()
         control = 3;
       }
 
-      if (rightBack.get_position() > origin - 75)
-      {
-        leftFront.move(10);
-        leftBack.move(10);
-        rightFront.move(-10);
-        rightBack.move(-10);
-      }
-      else
-      {
-        leftFront.move(0);
-        leftBack.move(0);
-        rightFront.move(0);
-        rightBack.move(0);
-        control = 4;
-      }
     }
   }
 
