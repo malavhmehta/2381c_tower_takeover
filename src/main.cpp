@@ -583,7 +583,8 @@ void opcontrol()
     pros::delay(20);
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
-    pros::lcd::set_text(6, "control variable " + std::to_string(toggle));
+    pros::lcd::set_text(6, "toggle variable " + std::to_string(toggle));
+    pros::lcd::set_text(6, "control variable " + std::to_string(control));
 
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
