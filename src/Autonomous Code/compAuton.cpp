@@ -84,25 +84,40 @@ void cancerBigRed() {
 // Deploy function which will be called in autonomous to extend the tray of the robot.
 void deploy()
 {
-  lift.move(-70);
-  pros::delay(1600);
+  while(lift.get_position() > -1900) {
+    lift.move(-200);
+  } 
+
+  if(master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+    return;
+  }
+
+  leftIntake.move(-100);
+  rightIntake.move(100);
+  pros::delay(800);
+
+  leftIntake.move(0);
+  rightIntake.move(0);
+
+  lift.move(180);
+  pros::delay(600);
   lift.move(0);
 
-  rightIntake.move(100);
-  leftIntake.move(-100);
-  pros::delay(500);
-  rightIntake.move(0);
-  leftIntake.move(0);
+  leftBack.move(50);
+  leftFront.move(-50);
+  rightBack.move(-50);
+  rightFront.move(50);
 
-  leftFront.move(-30);
-  leftBack.move(-30);
-  rightBack.move(30);
-  rightFront.move(30);
-  pros::delay(500);
-  leftFront.move(0);
+  pros::delay(800);
+
   leftBack.move(0);
+  leftFront.move(0);
   rightBack.move(0);
   rightFront.move(0);
+
+  pros::delay(400);
+  
+  return;
 }
 
 /**

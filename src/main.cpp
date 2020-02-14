@@ -70,7 +70,7 @@ PID *drivebasePIDController = new PID(
  * For the testing of a manual (non-PID) based autonomous drivepath. This function
  * can be called to move the robot in any valid direction, with a predefined delay
  * and a given movemenet factor.
- * 
+ *
  * @param direction gets the direction to determine how the motors in the H-drive
  *                  configuration need to be moved.
  * @param delay     determines the delay after the motor movement, for the motor's
@@ -144,6 +144,7 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMo
 
   // Delay to ensure that the movement is completed.
   pros::delay(delay);
+  return;
 }
 
 /**
@@ -154,13 +155,14 @@ void moveRobotManual(DIRECTION direction, int delay, int movFactor, int intakeMo
 void stopDrivebase()
 {
   moveRobotManual(FORWARD, 100, 0, 0, 0);
+  return;
 }
 
 /**
  * This function moves the center motor of the H-drive to enable strafing. The purpose of
  * this is to manually move the H-drive during the autonomous sequence, as strafing will
  * make the planned drive pathway shorter.
- * 
+ *
  * @param direction   determines which direction the robot will strafe (LEFT/RIGHT)
  * @param motorSpeed  sets the speed of the center motor
  * @param motorDelay  determines for how long the motors will be moving
@@ -239,7 +241,8 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
   while (true)
   {
     double movFactor = drivebasePIDController->update(abs(encoderValue), abs(rightBack.get_position()));
-    if (movFactor > 80 && abs(rightBack.get_position()) < 400)
+    
+    if (movFactor > 65 && abs(rightBack.get_position()) < 400)
     {
       movFactor = 55;
     }
@@ -286,7 +289,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     rightBack.move(movFactor * cofRB);
     rightFront.move(movFactor * cofRF);
 
-    leftIntake.move(intakeSpeed * intakeL);
+     leftIntake.move(intakeSpeed * intakeL);
     rightIntake.move(intakeSpeed * intakeR);
 
     pros::lcd::set_text(1, std::to_string(rightBack.get_position()));
@@ -304,7 +307,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
  */
 void autonStack(double reset)
 {
-  pros::delay(500);
+  pros::delay(200);
 
   //rightBack.tare_position();
 
@@ -312,6 +315,11 @@ void autonStack(double reset)
   {
 
     double movFactor = anglerPIDController->update(reset + 1400, rightBack.get_position());
+
+     if(movFactor < 20) {  
+      movFactor = 20;
+      pros::lcd::set_text(9, "const speed");
+    }
 
     pros::lcd::set_text(1, "Motor position: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(2, "Motor speed: " + std::to_string(movFactor));
@@ -324,7 +332,7 @@ void autonStack(double reset)
 
     // Checking for the sentinel value (using the motor's encoder values) to determine if
     // the operation has been completed.
-    if (rightBack.get_position() > 1280)
+    if (rightBack.get_position() > 1400)
     {
       leftFront.move(0);
       leftBack.move(0);
@@ -334,16 +342,30 @@ void autonStack(double reset)
       break;
     }
 
+    if(rightBack.get_position() > 1200) {
+      leftIntake.move(-20);
+      rightIntake.move(20);
+    }
+
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+    {
+      break;
+    }
+
     // Delay as to not overload the motor.
     pros::delay(delay);
   }
 
-  pros::delay(1000);
+  if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
 
-  moveRobotManual(TRANS_DOWN, 500, 20, 0, 0);
-  stopDrivebase();
-  moveRobotManual(REVERSE, 1000, 40, 1, -80);
-  stopDrivebase();
+  
+    pros::delay(1000);
+
+    moveRobotManual(TRANS_DOWN, 500, 20, 0, 0);
+    stopDrivebase();
+    moveRobotManual(REVERSE, 1000, 40, 1, -50);
+    stopDrivebase();
+  }
 }
 
 /**
@@ -370,7 +392,7 @@ void smallBlue()
    */
   moveRobot(-3900 - 900, FORWARD, 1, 200);
   moveRobot(3340 + 900, REVERSE, 0, 0);
-  
+
   /*
    * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
    * facing its starting direction). This is done so that once the robot is moved with
@@ -398,7 +420,6 @@ void smallBlue()
   autonStack(rightBack.get_position());
 }
 
-
 /**
  * Defines the drivepath for the small red goal zone. The motions are currently
  * automatically profiled with the use of PIDs.
@@ -406,15 +427,22 @@ void smallBlue()
  */
 void smallRed()
 {
+  deploy();
+
   /*
    * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
    * of the robot from its starting position. By the end of this motion, the robot will
    * have 4 cubes in the tray (possible 5 based on the placement of the preload after
    * the robot deploys).
    */
-  moveRobot(-3900 - 900, FORWARD, 1, 200);
-  moveRobot(3340 + 900, REVERSE, 0, 0);
+
+  moveRobot(-3900 - 900, FORWARD, 1, 180);
+  moveRobot(3340 + 900, REVERSE, 1, -60);
+  // moveRobotManual(REVERSE, 2000, 90, 0, 0);
+  // rightBack
+  // stopDrivebase();
   
+
   /*
    * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
    * facing its starting direction). This is done so that once the robot is moved with
@@ -429,14 +457,14 @@ void smallRed()
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone. 
    */
-  strafeRobot(LEFT, 150, 800);
+  strafeRobot(LEFT, 180, 1000);
   strafeRobot(LEFT, 0, 0);
 
   /*
    * Move FORWARD, towards the goalzone. The robot will stop slightly away from the goal
    * zone, and will leave the right amount of room for the stacking process. 
    */
-  moveRobot(-500 - 900, FORWARD, 0, 0);
+  moveRobot(-750 - 900, FORWARD, 0, 0);
 
   // STACK the cubes. This is the end of the autonomous sequence.
   autonStack(rightBack.get_position());
@@ -463,13 +491,13 @@ void bigRed()
 
   // Turn robot left
   moveRobot(-800 - 900, RIGHT, 0, 0);
-  
+
   // Strafe INTO the wall
   strafeRobot(LEFT, 150, 800);
   strafeRobot(LEFT, 0, 0);
 
   // Move forward into the goalzone
-  moveRobot(-500 - 900, FORWARD, 0, 0);
+  moveRobot(-700 - 900, FORWARD, 0, 0);
 
   // STACK the cubes. This is the end of the autonomous sequence.
   autonStack(rightBack.get_position());
@@ -481,7 +509,6 @@ void bigRed()
   // stopDrivebase();
   // rightIntake.move(0);
   // leftIntake.move(0);
-
 
   // // Move the robot backwards.
   // moveRobotManual(REVERSE, 800, 60, 0, 0);
@@ -584,14 +611,15 @@ void opcontrol()
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
     pros::lcd::set_text(6, "toggle variable " + std::to_string(toggle));
-    pros::lcd::set_text(6, "control variable " + std::to_string(control));
+    pros::lcd::set_text(7, "control variable " + std::to_string(control));
+    pros::lcd::set_text(3, "Goofy temp " + std::to_string(lift.get_temperature()));
 
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    center.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+    center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
 
     // Keeping the motors at move_velocity(0) keeps the motor position locked.
     leftIntake.move_velocity(0);
@@ -605,19 +633,17 @@ void opcontrol()
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
-    if(toggle%2 == 0) {
-      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+    {
+      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
       {
-        if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
-        {
-          leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-          rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-        }
-        leftFront.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-        leftBack.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-        rightBack.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-        rightFront.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+        leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       }
+      leftFront.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      leftBack.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      rightBack.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      rightFront.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
     }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
@@ -654,40 +680,67 @@ void opcontrol()
 
     pros::delay(20);
 
-
     //Tower Macros
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+    {
       toggle++;
+      pros::delay(100);
+
+      if(lift.get_position() < 20) {
+        control = 0;
+      }
     }
-    
-    if(toggle%2 != 0) {
-      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+
+    if (toggle % 2 != 0)
+    {
+      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+      {
         control++;
+        stop++;
+        pros::delay(100);
       }
-      else if(control > 2) {
+      else if (control > 2)
+      {
         control = 0;
       }
     }
 
-    if(control%2 == 0 && !(control == 0)) {
-      if(lift.get_position() < -2200) {
-        lift.move(-140);
+    if(toggle%2 != 0) {
+      if (control == 1)
+      {
+        if (lift.get_position() >= -1500)
+        {
+          lift.move(-140);
+        }
+        else
+        {
+          lift.move(0);
+        }
       }
 
-    }
-    
-    if(control%2 != 0 && !(control == 0)) {
-      if(lift.get_position() < -1900) {
-        lift.move(-140);
+      if (control == 2)
+      {
+        if (lift.get_position() >= -2300)
+        {
+          lift.move(-140);
+        }
+        else
+        {
+          lift.move(0);
+        }
       }
-    }
 
-    if(control == 0) {
-      if(lift.get_position() < -1000) {
-        lift.move(140);
-      }
-      else  {
-        control = 0;
+      if (control == 0)
+      {
+        if (lift.get_position() < 400)
+        {
+          lift.move(140);
+        }
+        else
+        {
+          control = 0;
+          lift.move(0);
+        }
       }
     }
 
@@ -696,6 +749,10 @@ void opcontrol()
       rightBack.tare_position();
       origin = rightBack.get_position();
       autonStack(origin);
+    }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+      deploy();
     }
 
     pros::delay(50);

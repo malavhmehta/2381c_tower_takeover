@@ -27,6 +27,8 @@ int origin = 0;
 // Global and constant delay.
 int delay = 20;
 
+int stop = 0;
+
 int control = 0;
 int toggle = 0;
 int cancel = 0;
