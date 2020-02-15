@@ -23,11 +23,19 @@ pros::ADIEncoder encoder(1, 2, false);
 pros::ADIAnalogIn gyro('H');
 
 int origin = 0;
-
+int secure = 0;
 // Global and constant delay.
 int delay = 20;
 
+int stop = 0;
+int start = 0;
+
+int control = 4;
+int toggle = 1;
+int cancel = 0;
 // Defining PID Params for the angler and the drivebase.
+
+
 std::array<double, 3> anglerPIDParams = {0.08, 0, 0};
 std::array<double, 3> drivebasePIDParams = {0.032, 0, 0};
 
