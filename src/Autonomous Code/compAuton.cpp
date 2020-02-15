@@ -1,13 +1,13 @@
 
 
-void cancerBigRed() {
+void oldBigRed() {
   leftBack.move(60);
   leftFront.move(-60);
   rightBack.move(-60);
   rightFront.move(60);
 
-  rightIntake.move(-186);
-  leftIntake.move(186);
+  rightIntake.move(-150);
+  leftIntake.move(150);
 
   pros::delay(1200);
 
@@ -24,7 +24,88 @@ void cancerBigRed() {
   rightBack.move_velocity(60);
   rightFront.move_velocity(-60);
 
-  pros::delay(800);
+  pros::delay(900);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  pros::delay(20);
+
+  leftBack.move(70);
+  leftFront.move(-70);
+  rightBack.move(70);
+  rightFront.move(-70);
+
+  pros::delay(650);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+  pros::delay(20);
+  leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  pros::delay(1300);
+
+	leftBack.move(0);
+	leftFront.move(0);
+	rightBack.move(0);
+	rightFront.move(0);
+
+  rightIntake.move(186);
+  leftIntake.move(-186);
+
+  pros::delay(1500);
+
+
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move(-60);
+  leftFront.move(60);
+  rightBack.move(60);
+  rightFront.move(-60);
+
+  pros::delay(2000);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+}
+
+void oldBigBlue() {
+  leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  rightIntake.move(-150);
+  leftIntake.move(150);
+
+  pros::delay(1200);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  rightIntake.move(0);
+  leftIntake.move(0);
+
+  leftBack.move_velocity(-60);
+  leftFront.move_velocity(60);
+  rightBack.move_velocity(60);
+  rightFront.move_velocity(-60);
+
+  pros::delay(900);
 
   leftBack.move(0);
   leftFront.move(0);
@@ -85,29 +166,28 @@ void cancerBigRed() {
 void deploy()
 {
   while(lift.get_position() > -1900) {
-    lift.move(-200);
+    lift.move(-150);
   } 
-
-  if(master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
-    return;
-  }
 
   leftIntake.move(-100);
   rightIntake.move(100);
-  pros::delay(800);
+  pros::delay(500);
 
   leftIntake.move(0);
   rightIntake.move(0);
 
-  lift.move(180);
-  pros::delay(600);
-  lift.move(0);
-
+  while(lift.get_position() < 100) {
+    lift.move(180);
+  }
+  
+  
+  lift.move(17);
+  
   leftBack.move(50);
   leftFront.move(-50);
   rightBack.move(-50);
   rightFront.move(50);
-
+  
   pros::delay(800);
 
   leftBack.move(0);

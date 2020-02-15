@@ -25,7 +25,7 @@ enum AUTON_POS
 };
 
 // Define the starting AUTONOMOUS POSITION at the top, which can be changed match after match.
-AUTON_POS startingPosition = SMALL_RED;
+AUTON_POS startingPosition = BIG_RED;
 
 // Possible DIRECTIONS
 enum DIRECTION
@@ -227,12 +227,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     break;
   }
 
-  if (intakeMove == 1 && intakeSpeed < 0)
-  {
-    intakeL = -1;
-    intakeR = 1;
-  }
-  else if (intakeMove == 1 && intakeSpeed > 0)
+  if (intakeMove == 1)
   {
     intakeR = -1;
     intakeL = 1;
@@ -244,7 +239,24 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     
     if (movFactor > 65 && abs(rightBack.get_position()) < 400)
     {
-      movFactor = 55;
+      movFactor = 60;
+    }
+    
+    if(encoderValue == 3400 - 900) {
+      if(movFactor < 20) {
+        movFactor = 20;
+      }
+      else {
+        movFactor * 0.65;
+      }
+    }
+
+    if(encoderValue == 2800 + 900) {
+      movFactor * 1.2;
+    }
+
+    if(encoderValue == -900 - 800) {
+      movFactor = movFactor * 1.4;
     }
 
     if (encoderValue < 0)
@@ -289,8 +301,10 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     rightBack.move(movFactor * cofRB);
     rightFront.move(movFactor * cofRF);
 
-     leftIntake.move(intakeSpeed * intakeL);
+    leftIntake.move(intakeSpeed * intakeL);
     rightIntake.move(intakeSpeed * intakeR);
+    
+    
 
     pros::lcd::set_text(1, std::to_string(rightBack.get_position()));
     pros::lcd::set_text(2, std::to_string(movFactor));
@@ -314,12 +328,13 @@ void autonStack(double reset)
   while (true)
   {
 
-    double movFactor = anglerPIDController->update(reset + 1400, rightBack.get_position());
-
-     if(movFactor < 20) {  
-      movFactor = 20;
+    double movFactor = anglerPIDController->update(reset + 1450, rightBack.get_position());
+    
+     if(movFactor < 25) {  
+      movFactor = 25;
       pros::lcd::set_text(9, "const speed");
     }
+    
 
     pros::lcd::set_text(1, "Motor position: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(2, "Motor speed: " + std::to_string(movFactor));
@@ -332,7 +347,7 @@ void autonStack(double reset)
 
     // Checking for the sentinel value (using the motor's encoder values) to determine if
     // the operation has been completed.
-    if (rightBack.get_position() > 1400)
+    if (rightBack.get_position() > 1450)
     {
       leftFront.move(0);
       leftBack.move(0);
@@ -340,11 +355,6 @@ void autonStack(double reset)
       rightBack.move(0);
       rightBack.tare_position();
       break;
-    }
-
-    if(rightBack.get_position() > 1200) {
-      leftIntake.move(-20);
-      rightIntake.move(20);
     }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
@@ -363,7 +373,7 @@ void autonStack(double reset)
 
     moveRobotManual(TRANS_DOWN, 500, 20, 0, 0);
     stopDrivebase();
-    moveRobotManual(REVERSE, 1000, 40, 1, -50);
+    moveRobotManual(REVERSE, 1000, 60, 1, -50);
     stopDrivebase();
   }
 }
@@ -390,7 +400,7 @@ void smallBlue()
    * have 4 cubes in the tray (possible 5 based on the placement of the preload after
    * the robot deploys).
    */
-  moveRobot(-3900 - 900, FORWARD, 1, 200);
+  //moveRobot(-3900 - 900, FORWARD, 1, 200);
   moveRobot(3340 + 900, REVERSE, 0, 0);
 
   /*
@@ -425,10 +435,12 @@ void smallBlue()
  * automatically profiled with the use of PIDs.
  * This sequence supports a MAXIMUM of: FOUR (4) cubes.
  */
+
 void smallRed()
 {
   deploy();
-
+  
+  lift.move(17);
   /*
    * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
    * of the robot from its starting position. By the end of this motion, the robot will
@@ -436,12 +448,9 @@ void smallRed()
    * the robot deploys).
    */
 
-  moveRobot(-3900 - 900, FORWARD, 1, 180);
-  moveRobot(3340 + 900, REVERSE, 1, -60);
-  // moveRobotManual(REVERSE, 2000, 90, 0, 0);
-  // rightBack
-  // stopDrivebase();
-  
+  moveRobot(-3400 - 900, FORWARD, 1, 200);
+  moveRobot(2840 + 900, REVERSE, 1, 100);
+
 
   /*
    * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
@@ -457,14 +466,33 @@ void smallRed()
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone. 
    */
-  strafeRobot(LEFT, 180, 1000);
+  strafeRobot(LEFT, 200, 1200);
   strafeRobot(LEFT, 0, 0);
 
   /*
    * Move FORWARD, towards the goalzone. The robot will stop slightly away from the goal
    * zone, and will leave the right amount of room for the stacking process. 
    */
-  moveRobot(-750 - 900, FORWARD, 0, 0);
+  //moveRobot(-630 - 900, FORWARD, 0, 0);
+
+  leftBack.move(60);
+  leftFront.move(-60);
+  rightBack.move(-60);
+  rightFront.move(60);
+
+  leftIntake.move(-30);
+  rightIntake.move(30);
+
+  pros::delay(630);
+
+  leftBack.move(0);
+  leftFront.move(0);
+  rightBack.move(0);
+  rightFront.move(0);
+
+  pros::delay(200);
+
+  rightBack.tare_position();
 
   // STACK the cubes. This is the end of the autonomous sequence.
   autonStack(rightBack.get_position());
@@ -481,26 +509,33 @@ void bigRed()
    * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
    * of the robot from its starting position.
    */
-  moveRobot(-3900 - 900, FORWARD, 1, 200);
+  
+  deploy();
+  pros::delay(200);
 
-  // WAIT for the 4-cube stack to fall over (while keeping INTAKES running)
-  moveRobotManual(FORWARD, 750, 0, 1, 200);
+  oldBigRed();
 
-  // Continue driving forward to get the fallen cubes (Should be at 5 cubes max, realistically 3 cubes now)
-  moveRobot(-3900 - 900, FORWARD, 1, 200);
 
-  // Turn robot left
-  moveRobot(-800 - 900, RIGHT, 0, 0);
+  // moveRobot(-3900 - 900, FORWARD, 1, 200);
 
-  // Strafe INTO the wall
-  strafeRobot(LEFT, 150, 800);
-  strafeRobot(LEFT, 0, 0);
+  // // WAIT for the 4-cube stack to fall over (while keeping INTAKES running)
+  // moveRobotManual(FORWARD, 680, 0, 1, 200);
 
-  // Move forward into the goalzone
-  moveRobot(-700 - 900, FORWARD, 0, 0);
+  // // Continue driving forward to get the fallen cubes (Should be at 5 cubes max, realistically 3 cubes now)
+  // moveRobot(-3900 - 900, FORWARD, 1, 200);
 
-  // STACK the cubes. This is the end of the autonomous sequence.
-  autonStack(rightBack.get_position());
+  // // Turn robot left
+  // moveRobot(-800 - 900, RIGHT, 0, 0);
+
+  // // Strafe INTO the wall
+  // strafeRobot(LEFT, 150, 800);
+  // strafeRobot(LEFT, 0, 0);
+
+  // // Move forward into the goalzone
+  // moveRobot(-700 - 900, FORWARD, 0, 0);
+
+  // // STACK the cubes. This is the end of the autonomous sequence.
+  // autonStack(rightBack.get_position());
 
   // // Intake the first cube.
 
@@ -543,58 +578,38 @@ void bigRed()
  */
 void bigBlue()
 {
+  
+  deploy();
+  pros::delay(200);
+
+  oldBigBlue();
+ 
   // Intake the first cube.
-  moveRobotManual(FORWARD, 1200, 60, 1, 186 / 2);
+  // moveRobotManual(FORWARD, 1200, 60, 1, 186 / 2);
 
-  stopDrivebase();
+  // stopDrivebase();
 
-  // Move the robot backwards.
-  moveRobotManual(REVERSE, 800, 60, 0, 0);
-  stopDrivebase();
+  // // Move the robot backwards.
+  // moveRobotManual(REVERSE, 800, 60, 0, 0);
+  // stopDrivebase();
 
-  // Turn the robot towards the goal zone (RIGHT).
-  moveRobotManual(RIGHT, 650, 70, 0, 0);
-  stopDrivebase();
+  // // Turn the robot towards the goal zone (RIGHT).
+  // moveRobotManual(RIGHT, 650, 70, 0, 0);
+  // stopDrivebase();
 
-  // Move the robot all the way towards the goal zone.
-  moveRobotManual(FORWARD, 1300, 60, 0, 0);
+  // // Move the robot all the way towards the goal zone.
+  // moveRobotManual(FORWARD, 1300, 60, 0, 0);
 
-  // Outtake the cube.
-  moveRobotManual(FORWARD, 1500, 0, 1, -186 / 2);
+  // // Outtake the cube.
+  // moveRobotManual(FORWARD, 1500, 0, 1, -186 / 2);
 
-  // Drive away from the goal zone.
-  moveRobotManual(REVERSE, 2000, 60, 0, 0);
-  stopDrivebase();
+  // // Drive away from the goal zone.
+  // moveRobotManual(REVERSE, 2000, 60, 0, 0);
+  // stopDrivebase();
 }
 
-void autonomous()
-{
-  // deploy();
-  // pros::delay(1000);
-
-  switch (startingPosition)
-  {
-  case BIG_RED:
-    bigRed();
-    break;
-
-  case BIG_BLUE:
-    bigBlue();
-    break;
-
-  case SMALL_RED:
-    smallRed();
-    break;
-
-  case SMALL_BLUE:
-    smallBlue();
-    break;
-
-  case SAFE_AUTON:
-    deploy();
-    pros::delay(1000);
-    break;
-  }
+void autonomous() {
+  bigRed();
 }
 
 /**
@@ -613,6 +628,7 @@ void opcontrol()
     pros::lcd::set_text(6, "toggle variable " + std::to_string(toggle));
     pros::lcd::set_text(7, "control variable " + std::to_string(control));
     pros::lcd::set_text(3, "Goofy temp " + std::to_string(lift.get_temperature()));
+    pros::lcd::set_text(1, "start var " + std::to_string(start));
 
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
@@ -685,10 +701,11 @@ void opcontrol()
     {
       toggle++;
       pros::delay(100);
+      
+    }
 
-      if(lift.get_position() < 20) {
-        control = 0;
-      }
+    if(toggle % 2 == 0) {
+      lift.move(17);
     }
 
     if (toggle % 2 != 0)
@@ -696,17 +713,43 @@ void opcontrol()
       if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
       {
         control++;
-        stop++;
+
+        stop = 4;
+        start = 0;
+
         pros::delay(100);
       }
       else if (control > 2)
       {
+        stop = 0;
         control = 0;
+        start = 0;
       }
     }
 
     if(toggle%2 != 0) {
-      if (control == 1)
+      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && control != 0) {
+        stop = 3;
+        lift.move(-20);
+        pros::lcd::set_text(8, "left toggled");
+        start++;
+      }
+      else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT) && control != 0) {
+        stop = 5;
+        lift.move(20);
+        start++;
+      }
+      
+      
+      if(start > 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+        lift.move(-10);
+      }
+
+      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+        stop = 6;
+      }
+
+      if (control == 1 && stop == 4)
       {
         if (lift.get_position() >= -1500)
         {
@@ -714,11 +757,11 @@ void opcontrol()
         }
         else
         {
-          lift.move(0);
+          lift.move(-10);
         }
       }
 
-      if (control == 2)
+      if (control == 2 && stop == 4)
       {
         if (lift.get_position() >= -2300)
         {
@@ -726,22 +769,25 @@ void opcontrol()
         }
         else
         {
-          lift.move(0);
+          lift.move(-10);
         }
       }
 
-      if (control == 0)
-      {
-        if (lift.get_position() < 400)
+      if(stop == 0 && stop != 6) {
+        if (lift.get_position() < 0)
         {
-          lift.move(140);
+          lift.move(100);
         }
-        else
-        {
-          control = 0;
-          lift.move(0);
+        else {
+          lift.move(17);
         }
+
+        
       }
+      
+
+
+      
     }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
