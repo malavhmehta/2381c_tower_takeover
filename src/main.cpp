@@ -509,7 +509,7 @@ void bigRed()
    * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
    * of the robot from its starting position.
    */
-  
+
   deploy();
   pros::delay(200);
 
