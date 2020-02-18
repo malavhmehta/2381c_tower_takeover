@@ -21,6 +21,7 @@ pros::Motor lift(14);
 pros::Motor center(16);
 pros::ADIEncoder encoder(1, 2, false);
 pros::ADIAnalogIn gyro('H');
+pros::Imu inertial(9);
 
 int origin = 0;
 int secure = 0;

@@ -7,7 +7,7 @@ void forwards() {
   leftIntake.move(-30);
   rightIntake.move(30);
 
-  pros::delay(700);
+  pros::delay(550);
 
   leftBack.move(0);
   leftFront.move(0);
@@ -16,6 +16,8 @@ void forwards() {
 }
 
 void oldBigRed() {
+  pros::delay(200);
+
   leftBack.move(60);
   leftFront.move(-60);
   rightBack.move(-60);
@@ -97,6 +99,8 @@ void oldBigRed() {
 }
 
 void oldBigBlue() {
+  pros::delay(200);
+  
   leftBack.move(60);
   leftFront.move(-60);
   rightBack.move(-60);
