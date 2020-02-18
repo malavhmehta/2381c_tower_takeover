@@ -15,7 +15,7 @@ pros::Motor leftBack(12);
 pros::Motor leftFront(11);
 pros::Motor rightBack(19);
 pros::Motor rightFront(20);
-pros::Motor leftIntake(18);
+pros::Motor leftIntake(10);
 pros::Motor rightIntake(15);
 pros::Motor lift(14);
 pros::Motor center(16);
@@ -36,7 +36,7 @@ int cancel = 0;
 // Defining PID Params for the angler and the drivebase.
 
 
-std::array<double, 3> anglerPIDParams = {0.08, 0, 0};
+std::array<double, 3> anglerPIDParams = {0.1, 0, 0};
 std::array<double, 3> drivebasePIDParams = {0.032, 0, 0};
 
 #endif
