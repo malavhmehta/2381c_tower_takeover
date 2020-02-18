@@ -275,8 +275,8 @@
         "upload_options": {
             "compress_bin": true,
             "description": "Created with PROS",
-            "remote_name": "bigAutonBlue",
-            "slot": 6
+            "remote_name": "smallRed",
+            "slot": 4
         }
     }
 }
