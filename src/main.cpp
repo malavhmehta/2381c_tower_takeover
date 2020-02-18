@@ -518,8 +518,9 @@ void smallRed()
    * zone, and will leave the right amount of room for the stacking process.
    */
   //moveRobot(-630 - 900, FORWARD, 0, 0);
-  forwards();
-
+  //forwards();
+  
+  moveRobot(-600 - 900, FORWARD, 1, -30);
   pros::delay(200);
 
   rightBack.tare_position();
