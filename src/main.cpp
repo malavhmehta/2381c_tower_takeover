@@ -11,6 +11,8 @@
 #include "pid.hpp"
 #include "definitions.hpp"
 #include "Autonomous Code/compAuton.cpp"
+#include "Autonomous Code/bigAuton.cpp"
+
 
 // ENUMERATED variables used for when these variables are passed as parameters in functions.
 
@@ -286,7 +288,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
         rightFront.move(0);
         rightBack.move(0);
 
-        pros::delay(20);
+        pros::delay(100);
         return;
       }
     }
@@ -303,7 +305,7 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
         rightFront.move(0);
         rightBack.move(0);
 
-        pros::delay(20);
+        pros::delay(100);
         return;
       }
     }
@@ -360,8 +362,8 @@ void autonStack(double reset)
     rightBack.move(movFactor);
 
     if(abs(rightBack.get_position()) < abs(reset - (reset + 500))) {
-      leftIntake.move(-20);
-      rightIntake.move(20);
+      leftIntake.move(-25);
+      rightIntake.move(25);
     }
 
     // Checking for the sentinel value (using the motor's encoder values) to determine if
@@ -508,7 +510,7 @@ void smallRed()
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone.
    */
-  strafeRobot(LEFT, 200, 2000);
+  strafeRobot(LEFT, 200, 2200);
   strafeRobot(LEFT, 0, 0);
 
   /*
@@ -558,114 +560,48 @@ void testRed() {
 
 }
 
-void bigRed()
-{
-  /*
-   * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
-   * of the robot from its starting position.
-   */
+void bigRed3() {
+  moveRobot(-1300 - 900, FORWARD, 1, 200);
 
-  deploy();
-  pros::delay(200);
+  moveRobot(600 + 900, LEFT, 0, 0);
+  moveRobot(-1600 - 900, FORWARD, 1, 200);
+  moveRobot(500 + 900, LEFT, 1, 200);
+  moveRobot(-800 -900, FORWARD, 1, -23);
 
-  oldBigRed();
+  rightBack.tare_position();
+  autonStack(rightBack.get_position());
 
-
-  // moveRobot(-3900 - 900, FORWARD, 1, 200);
-
-  // // WAIT for the 4-cube stack to fall over (while keeping INTAKES running)
-  // moveRobotManual(FORWARD, 680, 0, 1, 200);
-
-  // // Continue driving forward to get the fallen cubes (Should be at 5 cubes max, realistically 3 cubes now)
-  // moveRobot(-3900 - 900, FORWARD, 1, 200);
-
-  // // Turn robot left
-  // moveRobot(-800 - 900, RIGHT, 0, 0);
-
-  // // Strafe INTO the wall
-  // strafeRobot(LEFT, 150, 800);
-  // strafeRobot(LEFT, 0, 0);
-
-  // // Move forward into the goalzone
-  // moveRobot(-700 - 900, FORWARD, 0, 0);
-
-  // // STACK the cubes. This is the end of the autonomous sequence.
-  // autonStack(rightBack.get_position());
-
-  // // Intake the first cube.
-
-  // moveRobotManual(FORWARD, 1200, 60, 1, 186 / 2);
-
-  // stopDrivebase();
-  // rightIntake.move(0);
-  // leftIntake.move(0);
-
-  // // Move the robot backwards.
-  // moveRobotManual(REVERSE, 800, 60, 0, 0);
-  // stopDrivebase();
-
-  // moveRobotManual(FORWARD, 1000, 10, 1, 150);
-
-  // stopDrivebase();
-
-  // // Turn the robot towards the goal zone (LEFT).
-  // moveRobotManual(LEFT, 650, 70, 0, 0);
-  // stopDrivebase();
-
-  // // Move the robot all the way towards the goal zone.
-  // moveRobotManual(FORWARD, 1300, 60, 0, 0);
-
-  // // Outtake the cube
-  // moveRobotManual(FORWARD, 1500, 0, 1, -186 / 2);
-
-  // rightIntake.move(0);
-  // leftIntake.move(0);
-
-  // // Drive away from the goal zone.
-  // moveRobotManual(REVERSE, 2000, 60, 0, 0);
-  // stopDrivebase();
 }
 
-/**
- * Defines the drivepath for the big blue goal zone. The motion are currently manually
- * profiled using the 'moveRobotManual' function.
- * This sequence supports a MAXIMUM of: ONE (1) cube.
- */
-void bigBlue()
-{
+void bigRed(int select) {
+  if(select == 1) {
+    oneBigRed();
+  }
+  else if(select == 2) {
+    bigRed2();
 
-  deploy();
-  pros::delay(200);
+    rightBack.tare_position();
+    autonStack(rightBack.get_position());
+  }
+  else if(select == 3) {
+    bigRed3();
+  }
+}
 
-  oldBigBlue();
+void bigBlue(int select) {
+  if(select == 1) {
+    oneBigBlue();
+  }
+  else if(select == 2) {
+    bigBlue2();
 
-  // Intake the first cube.
-  // moveRobotManual(FORWARD, 1200, 60, 1, 186 / 2);
-
-  // stopDrivebase();
-
-  // // Move the robot backwards.
-  // moveRobotManual(REVERSE, 800, 60, 0, 0);
-  // stopDrivebase();
-
-  // // Turn the robot towards the goal zone (RIGHT).
-  // moveRobotManual(RIGHT, 650, 70, 0, 0);
-  // stopDrivebase();
-
-  // // Move the robot all the way towards the goal zone.
-  // moveRobotManual(FORWARD, 1300, 60, 0, 0);
-
-  // // Outtake the cube.
-  // moveRobotManual(FORWARD, 1500, 0, 1, -186 / 2);
-
-  // // Drive away from the goal zone.
-  // moveRobotManual(REVERSE, 2000, 60, 0, 0);
-  // stopDrivebase();
+    rightBack.tare_position();
+    autonStack(rightBack.get_position());
+  }
 }
 
 void autonomous() {
-  smallRed();
-
+  bigRed(3);
 }
 
 /**
