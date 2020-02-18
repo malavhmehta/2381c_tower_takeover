@@ -246,12 +246,12 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
 
     
 
-    if(encoderValue == 3100 - 900) {
+    if(encoderValue == -3300 - 900) {
       if(movFactor < 20) {
         movFactor = 20;
       }
       else {
-        movFactor * 0.65;
+        movFactor * 0.6;
       }
     }
 
@@ -362,8 +362,8 @@ void autonStack(double reset)
     rightBack.move(movFactor);
 
     if(abs(rightBack.get_position()) < abs(reset - (reset + 500))) {
-      leftIntake.move(-25);
-      rightIntake.move(25);
+      leftIntake.move(-27);
+      rightIntake.move(27);
     }
 
     // Checking for the sentinel value (using the motor's encoder values) to determine if
@@ -404,7 +404,7 @@ void autonStack(double reset)
 void initialize()
 {
   pros::lcd::initialize();
-  pros::lcd::set_text(1, "Go 2381C!");
+  inertial.reset();
 }
 
 /**
@@ -424,7 +424,7 @@ void smallBlue()
    * the robot deploys).
    */
 
-  moveRobot(-3400 - 900, FORWARD, 1, 200);
+  moveRobot(-3300 - 900, FORWARD, 1, 200);
   moveRobot(2840 + 900, REVERSE, 1, 100);
 
 
@@ -492,7 +492,7 @@ void smallRed()
    * the robot deploys).
    */
 
-  moveRobot(-3400 - 900, FORWARD, 1, 200);
+  moveRobot(-3300 - 900, FORWARD, 1, 200);
   moveRobot(2840 + 900, REVERSE, 1, 100);
 
 
@@ -520,7 +520,7 @@ void smallRed()
   //moveRobot(-630 - 900, FORWARD, 0, 0);
   //forwards();
   
-  moveRobot(-600 - 900, FORWARD, 1, -30);
+  moveRobot(-650 - 900, FORWARD, 1, -33);
   pros::delay(200);
 
   rightBack.tare_position();
@@ -602,7 +602,7 @@ void bigBlue(int select) {
 }
 
 void autonomous() {
-  bigRed(3);
+  smallRed();
 }
 
 /**
@@ -619,11 +619,18 @@ void opcontrol()
     pros::delay(20);
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
-    pros::lcd::set_text(6, " Motor LF " + std::to_string(leftFront.get_temperature()));
-    pros::lcd::set_text(7, "Motor RF " + std::to_string(rightFront.get_temperature()));
+    // pros::lcd::set_text(6, " Motor LF " + std::to_string(leftFront.get_temperature()));
+    // pros::lcd::set_text(7, "Motor RF " + std::to_string(rightFront.get_temperature()));
     pros::lcd::set_text(3, "Goofy temp " + std::to_string(lift.get_temperature()));
-    pros::lcd::set_text(8, "Motor RB " + std::to_string(rightBack.get_temperature()));
-    pros::lcd::set_text(9, "Motor LB" + std::to_string(leftBack.get_temperature()));
+    // pros::lcd::set_text(8, "Motor RB " + std::to_string(rightBack.get_temperature()));
+    // pros::lcd::set_text(9, "Motor LB" + std::to_string(leftBack.get_temperature()));
+    pros::lcd::set_text(6, "x-AXIS: " + std::to_string(inertial.get_heading()));
+    pros::lcd::set_text(7, "Rotation: " + std::to_string(inertial.get_roll()));
+
+    
+    // pros::c::imu_gyro_s_t gyro = inertial.get_gyro_rate();
+    // pros::lcd::set_text(2, "IMU {x:" + std::to_string(gyro.x) + " y: " + std::to_string(gyro.y) + " z: " + std::to_string(gyro.z));
+    // pros::delay(20);
 
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
