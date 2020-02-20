@@ -13,7 +13,6 @@
 #include "Autonomous Code/compAuton.cpp"
 #include "Autonomous Code/bigAuton.cpp"
 
-
 // ENUMERATED variables used for when these variables are passed as parameters in functions.
 
 // Possible starting POSITION for the AUTONOMOUS sequence.
@@ -176,6 +175,18 @@ void strafeRobot(DIRECTION direction, int motorSpeed, int motorDelay)
   pros::delay(motorDelay);
 }
 
+int resetCof(int cof)
+{
+  int newCof = 1;
+
+  if (cof < 0)
+  {
+    newCof = -1;
+  }
+
+  return newCof;
+}
+
 /**
  * For the PID based autonomous drivepath. This function can be called to move the robot
  * in any valid direction, using a PID controller for the drive base. Essentially, the PID
@@ -192,7 +203,10 @@ void strafeRobot(DIRECTION direction, int motorSpeed, int motorDelay)
 void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int intakeSpeed)
 {
   // Motor coefficients for the H-Drive.
-  int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
+  double cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
+  //double cofChange = 0.02;
+  // int lastHeading = (int)inertial.get_heading();
+  // int currentHeading = (int)inertial.get_heading();
   int intakeR = 0, intakeL = 0;
 
   // Check the direction, and change the motor coefficient accordingly.
@@ -244,34 +258,40 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
       movFactor = 60;
     }
 
-    
-
-    if(encoderValue == -3300 - 900) {
-      if(movFactor < 20) {
+    if (encoderValue == -3300 - 900)
+    {
+      if (movFactor < 20)
+      {
         movFactor = 20;
       }
-      else {
+      else
+      {
         movFactor * 0.6;
       }
     }
 
-    if(encoderValue == 3200 + 900) {
+    if (encoderValue == 3200 + 900)
+    {
       movFactor = 150;
     }
 
-    if(encoderValue == -900 - 800) {
+    if (encoderValue == -900 - 800)
+    {
       movFactor = movFactor * 1.4;
     }
 
-    if(abs(encoderValue) - 900 < 1000) {
+    if (abs(encoderValue) - 900 < 1000)
+    {
       movFactor = 60;
     }
 
-    if(direction == LEFT || direction == RIGHT) {
+    if (direction == LEFT || direction == RIGHT)
+    {
       movFactor = 70;
     }
 
-    if(encoderValue == 1300) {
+    if (encoderValue == 1300)
+    {
       movFactor = 50;
     }
 
@@ -312,6 +332,32 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
 
     pros::lcd::set_text(2, std::to_string(movFactor));
 
+    // if (direction == FORWARD || direction == REVERSE)
+    // {
+    //   currentHeading = inertial.get_heading();
+    //   if ((currentHeading - lastHeading) >= 2)
+    //   {
+    //     cofRF += cofChange;
+    //     cofRB += cofChange;
+    //     cofLF = resetCof(cofLF);
+    //     cofLB = resetCof(cofLB);
+    //   }
+    //   else if ((lastHeading - currentHeading) >= 2)
+    //   {
+    //     cofRF = resetCof(cofRF);
+    //     cofRB = resetCof(cofRB);
+    //     cofLF += cofChange;
+    //     cofLB += cofChange;
+    //   }
+    //   else
+    //   {
+    //     cofRF = resetCof(cofRF);
+    //     cofRB = resetCof(cofRB);
+    //     cofLF = resetCof(cofLF);
+    //     cofLB = resetCof(cofLB);
+    //   }
+    // }
+
     leftBack.move(movFactor * cofLB);
     leftFront.move(movFactor * cofLF);
     rightBack.move(movFactor * cofRB);
@@ -319,8 +365,6 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
 
     leftIntake.move(intakeSpeed * intakeL);
     rightIntake.move(intakeSpeed * intakeR);
-
-
 
     pros::lcd::set_text(1, std::to_string(rightBack.get_position()));
     pros::lcd::set_text(2, std::to_string(movFactor));
@@ -346,11 +390,11 @@ void autonStack(double reset)
 
     double movFactor = anglerPIDController->update(reset + 1400, rightBack.get_position());
 
-     if(movFactor < 30) {
+    if (movFactor < 30)
+    {
       movFactor = 30;
       pros::lcd::set_text(9, "const speed");
     }
-
 
     pros::lcd::set_text(1, "Motor position: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(2, "Motor speed: " + std::to_string(movFactor));
@@ -361,14 +405,15 @@ void autonStack(double reset)
     rightFront.move(movFactor);
     rightBack.move(movFactor);
 
-    if(abs(rightBack.get_position()) < abs(reset - (reset + 500))) {
-      leftIntake.move(-27);
-      rightIntake.move(27);
+    if (abs(rightBack.get_position()) < abs(reset - (reset + 700)))
+    {
+      leftIntake.move(-14);
+      rightIntake.move(14);
     }
 
     // Checking for the sentinel value (using the motor's encoder values) to determine if
     // the operation has been completed.
-    if (rightBack.get_position() > 1450)
+    if (rightBack.get_position() > 1460)
     {
       leftFront.move(0);
       leftBack.move(0);
@@ -377,7 +422,6 @@ void autonStack(double reset)
       rightBack.tare_position();
       break;
     }
-
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
     {
@@ -388,12 +432,12 @@ void autonStack(double reset)
     pros::delay(delay);
   }
 
-  if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+  if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+  {
 
+    pros::delay(800);
 
-    pros::delay(700);
-
-    moveRobotManual(REVERSE, 1000, 60, 1, -50);
+    moveRobotManual(REVERSE, 1000, 80, 1, -80);
     stopDrivebase();
   }
 }
@@ -412,6 +456,62 @@ void initialize()
  * automatically profiled with the use of PIDs.
  * This sequence supports a MAXIMUM of: FOUR (4) cubes.
  */
+
+void perfectTurn(double encoder, int degree, DIRECTION direction)
+{
+  // Motor coefficients for the H-Drive.
+  int cofLB = 1, cofLF = 1, cofRB = 1, cofRF = 1;
+  int turnSwitch = 0;
+  // Check the direction, and change the motor coefficient accordingly.
+  switch (direction)
+  {
+  case RIGHT:
+    cofRB = -1;
+    cofLB = -1;
+    break;
+
+  case LEFT:
+    cofRF = -1;
+    cofLF = -1;
+    break;
+  }
+
+  while (true)
+  {
+    pros::delay(20);
+
+    double movFactor = drivebasePIDController->update(abs(encoder), abs(rightBack.get_position()));
+
+    if (movFactor < 10)
+    {
+      movFactor = 10;
+    }
+
+    pros::lcd::set_text(2, std::to_string(inertial.get_heading()));
+    pros::lcd::set_text(3, std::to_string(movFactor));
+
+    leftBack.move(movFactor * cofLB * 4);
+    leftFront.move(movFactor * cofLF * 4);
+    rightBack.move(movFactor * cofRB * 4);
+    rightFront.move(movFactor * cofRF * 4);
+
+
+    if (inertial.get_heading() >= degree - 1 && inertial.get_heading() <= degree + 1)
+    {
+      pros::lcd::set_text(5, "Hi");
+
+      rightBack.tare_position();
+
+      leftFront.move(0);
+      leftBack.move(0);
+      rightFront.move(0);
+      rightBack.move(0);
+
+      break;
+    }
+  }
+}
+
 void smallBlue()
 {
   deploy();
@@ -426,7 +526,6 @@ void smallBlue()
 
   moveRobot(-3300 - 900, FORWARD, 1, 200);
   moveRobot(2840 + 900, REVERSE, 1, 100);
-
 
   /*
    * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
@@ -495,7 +594,6 @@ void smallRed()
   moveRobot(-3300 - 900, FORWARD, 1, 200);
   moveRobot(2840 + 900, REVERSE, 1, 100);
 
-
   /*
    * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
    * facing its starting direction). This is done so that once the robot is moved with
@@ -519,8 +617,8 @@ void smallRed()
    */
   //moveRobot(-630 - 900, FORWARD, 0, 0);
   //forwards();
-  
-  moveRobot(-650 - 900, FORWARD, 1, -33);
+
+  moveRobot(-600 - 900, FORWARD, 1, -40);
   pros::delay(200);
 
   rightBack.tare_position();
@@ -535,7 +633,8 @@ void smallRed()
  * This sequence supports a MAXIMUM of: ONE (1) cube.
  */
 
-void testRed() {
+void testRed()
+{
   //deploy();
 
   lift.move(17);
@@ -554,46 +653,69 @@ void testRed() {
 
   // strafeRobot(LEFT, 200, 1200);
   // strafeRobot(LEFT, 0, 0);
-  
+
   // rightBack.tare_position();
   // moveRobot(-300 - 900, FORWARD, 0, 0);
-
-
 }
 
-void bigRed3() {
+void bigRed3()
+{
   moveRobot(-1300 - 900, FORWARD, 1, 200);
 
   moveRobot(600 + 900, LEFT, 0, 0);
   moveRobot(-1600 - 900, FORWARD, 1, 200);
   moveRobot(500 + 900, LEFT, 1, 200);
-  moveRobot(-800 -900, FORWARD, 1, -23);
+  moveRobot(-800 - 900, FORWARD, 1, -35);
 
   rightBack.tare_position();
   autonStack(rightBack.get_position());
-
 }
 
-void bigRed(int select) {
-  if(select == 1) {
+void bigRed4()
+{
+  moveRobot(-1300 - 900, FORWARD, 1, 200);
+  moveRobot(-750 - 900, RIGHT, 0, 0);
+  moveRobot(-900 - 900, FORWARD, 1, 200);
+  
+  moveRobot(1100 + 900, LEFT, 1, 100);
+  moveRobot(-2200 - 900, FORWARD, 1, 200);
+  moveRobot(480 + 900, LEFT, 1, 200);
+  moveRobot(-800 - 900, FORWARD, 1, -35);
+
+  rightBack.tare_position();
+  autonStack(rightBack.get_position());
+}
+
+void bigRed(int select)
+{
+  if (select == 1)
+  {
     oneBigRed();
   }
-  else if(select == 2) {
+  else if (select == 2)
+  {
     bigRed2();
 
     rightBack.tare_position();
     autonStack(rightBack.get_position());
   }
-  else if(select == 3) {
+  else if (select == 3)
+  {
     bigRed3();
+  }
+  else if(select = 4) {
+    bigRed4();
   }
 }
 
-void bigBlue(int select) {
-  if(select == 1) {
+void bigBlue(int select)
+{
+  if (select == 1)
+  {
     oneBigBlue();
   }
-  else if(select == 2) {
+  else if (select == 2)
+  {
     bigBlue2();
 
     rightBack.tare_position();
@@ -601,8 +723,36 @@ void bigBlue(int select) {
   }
 }
 
-void autonomous() {
-  smallRed();
+
+
+void progSkills()
+{
+  moveRobot(-3200 - 900, FORWARD, 1, 200);
+  perfectTurn(400, 330, LEFT);
+  moveRobot(-300 - 900, FORWARD, 1, 200);
+  moveRobot(300 + 900, REVERSE, 0, 0);
+  perfectTurn(-400, 0, RIGHT);
+  moveRobot(-3000 - 900, FORWARD, 1, 200);
+  perfectTurn(-600, 40, RIGHT);
+  moveRobot(-800 - 900, FORWARD, 1, 200);
+
+  autonStack(rightBack.get_position());
+
+  // moveRobot();// are you dead
+  // it BUILDs!
+  // just chekc for logic, based on my understanding it should work nwo
+  // because if so, then I would say, HI DEAD< IM MALVA
+}
+
+void callibrateIMU()
+{
+  inertial.reset();
+  pros::delay(2400);
+}
+
+void autonomous()
+{
+  bigRed4();
 }
 
 /**
@@ -610,6 +760,7 @@ void autonomous() {
  * robot. It also contains the necessary event listeners to trigger the driver's movements
  * and enable macros as requested.
  */
+
 void opcontrol()
 {
 
@@ -627,7 +778,10 @@ void opcontrol()
     pros::lcd::set_text(6, "x-AXIS: " + std::to_string(inertial.get_heading()));
     pros::lcd::set_text(7, "Rotation: " + std::to_string(inertial.get_roll()));
 
-    
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
+    {
+      inertial.reset();
+    }
     // pros::c::imu_gyro_s_t gyro = inertial.get_gyro_rate();
     // pros::lcd::set_text(2, "IMU {x:" + std::to_string(gyro.x) + " y: " + std::to_string(gyro.y) + " z: " + std::to_string(gyro.z));
     // pros::delay(20);
@@ -696,10 +850,10 @@ void opcontrol()
 
     // Driver control and macros for the grippy arm.
 
-  
     pros::delay(20);
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+    {
       rightBack.tare_position();
       autonStack(rightBack.get_position());
     }
@@ -709,10 +863,10 @@ void opcontrol()
     {
       toggle++;
       pros::delay(100);
-
     }
 
-    if(toggle % 2 == 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+    if (toggle % 2 == 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+    {
       lift.move(17);
     }
 
@@ -735,30 +889,33 @@ void opcontrol()
       }
     }
 
-    if(toggle%2 != 0) {
-      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && control != 0) {
+    if (toggle % 2 != 0)
+    {
+      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && control != 0)
+      {
         stop = 3;
-        lift.move(-20);
-        pros::lcd::set_text(8, "left toggled");
+        lift.move(-40);
+        pros::lcd::set_text(2, "left toggled");
         start++;
       }
-      else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT) && control != 0) {
-        stop = 5;
+      else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT) && control != 0)
+      {
+        stop = 3;
         lift.move(20);
+        pros::lcd::set_text(2, "right toggled");
         start++;
       }
 
-
-      if(start > 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+      if (start > 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+      {
         lift.move(-10);
       }
 
-      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+      {
         toggle++;
         stop = 6;
         control = 0;
-
-
       }
 
       if (control == 1 && stop == 4)
@@ -785,21 +942,17 @@ void opcontrol()
         }
       }
 
-      if(stop == 0 && stop != 6) {
+      if (stop == 0 && stop != 6)
+      {
         if (lift.get_position() < 0)
         {
           lift.move(100);
         }
-        else {
+        else
+        {
           lift.move(17);
         }
-
-
       }
-
-
-
-
     }
 
     pros::delay(50);
