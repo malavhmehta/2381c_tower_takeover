@@ -512,73 +512,6 @@ void perfectTurn(double encoder, int degree, DIRECTION direction)
   }
 }
 
-void smallBlue()
-{
-  deploy();
-
-  lift.move(17);
-  /*
-   * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
-   * of the robot from its starting position. By the end of this motion, the robot will
-   * have 4 cubes in the tray (possible 5 based on the placement of the preload after
-   * the robot deploys).
-   */
-
-  moveRobot(-3300 - 900, FORWARD, 1, 200);
-  moveRobot(2840 + 900, REVERSE, 1, 100);
-
-  /*
-   * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
-   * facing its starting direction). This is done so that once the robot is moved with
-   * its next motion, it will be directly in front of the small goalzone. The robot will
-   * complete this motion (rotation) with a left turn, so that it's easier to align
-   * in its next motion.
-   */
-  moveRobot(800 + 900, LEFT, 0, 0);
-
-  /*
-   * Move RIGHT by strafing using the H-drive's center wheel. This will allow the robot
-   * to move into the right perimeter wall. In doing so, the robot will automatically
-   * be aligned to be perfectly in front of the goalzone.
-   */
-  strafeRobot(RIGHT, 200, 1200);
-  strafeRobot(RIGHT, 0, 0);
-
-  /*
-   * Move FORWARD, towards the goalzone. The robot will stop slightly away from the goal
-   * zone, and will leave the right amount of room for the stacking process.
-   */
-  //moveRobot(-630 - 900, FORWARD, 0, 0);
-
-  leftBack.move(60);
-  leftFront.move(-60);
-  rightBack.move(-60);
-  rightFront.move(60);
-
-  leftIntake.move(-30);
-  rightIntake.move(30);
-
-  pros::delay(630);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  pros::delay(200);
-
-  rightBack.tare_position();
-
-  // STACK the cubes. This is the end of the autonomous sequence.
-  autonStack(rightBack.get_position());
-}
-
-/**
- * Defines the drivepath for the small red goal zone. The motions are currently
- * automatically profiled with the use of PIDs.
- * This sequence supports a MAXIMUM of: FOUR (4) cubes.
- */
-
 void smallRed()
 {
   deploy();
@@ -608,7 +541,61 @@ void smallRed()
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone.
    */
-  strafeRobot(LEFT, 200, 2200);
+  strafeRobot(LEFT, 100, 2200);
+  strafeRobot(LEFT, 0, 0);
+
+  /*
+   * Move FORWARD, towards the goalzone. The robot will stop slightly away from the goal
+   * zone, and will leave the right amount of room for the stacking process.
+   */
+  //moveRobot(-630 - 900, FORWARD, 0, 0);
+  //forwards();
+
+  moveRobot(-600 - 900, FORWARD, 1, -40);
+  pros::delay(200);
+
+  rightBack.tare_position();
+
+  // STACK the cubes. This is the end of the autonomous sequence.
+  autonStack(rightBack.get_position());
+}
+
+/**
+ * Defines the drivepath for the small red goal zone. The motions are currently
+ * automatically profiled with the use of PIDs.
+ * This sequence supports a MAXIMUM of: FOUR (4) cubes.
+ */
+
+void smallBlue()
+{
+  deploy();
+
+  lift.move(17);
+  /*
+   * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
+   * of the robot from its starting position. By the end of this motion, the robot will
+   * have 4 cubes in the tray (possible 5 based on the placement of the preload after
+   * the robot deploys).
+   */
+
+  moveRobot(-3300 - 900, FORWARD, 1, 200);
+  moveRobot(2840 + 900, REVERSE, 1, 100);
+
+  /*
+   * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
+   * facing its starting direction). This is done so that once the robot is moved with
+   * its next motion, it will be directly in front of the small goalzone. The robot will
+   * complete this motion (rotation) with a left turn, so that it's easier to align
+   * in its next motion.
+   */
+  moveRobot(750 + 900, LEFT, 0, 0);
+
+  /*
+   * Move RIGHT by strafing using the H-drive's center wheel. This will allow the robot
+   * to move into the right perimeter wall. In doing so, the robot will automatically
+   * be aligned to be perfectly in front of the goalzone.
+   */
+  strafeRobot(RIGHT, 100, 2200);
   strafeRobot(LEFT, 0, 0);
 
   /*
@@ -649,13 +636,6 @@ void testRed()
   pros::delay(300);
   moveRobot(3200 + 900, REVERSE, 1, 50);
   pros::delay(100);
-  // moveRobot(-800 - 900, RIGHT, 1, -25);
-
-  // strafeRobot(LEFT, 200, 1200);
-  // strafeRobot(LEFT, 0, 0);
-
-  // rightBack.tare_position();
-  // moveRobot(-300 - 900, FORWARD, 0, 0);
 }
 
 void bigRed3()
