@@ -891,6 +891,11 @@ void opcontrol()
 
     if (toggle % 2 != 0)
     {
+      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+        control = 0;
+        stop = 4;
+      }
+
       if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && control != 0)
       {
         stop = 3;
@@ -942,7 +947,7 @@ void opcontrol()
         }
       }
 
-      if (stop == 0 && stop != 6)
+      if (control == 0 && stop != 6)
       {
         if (lift.get_position() < 0)
         {
