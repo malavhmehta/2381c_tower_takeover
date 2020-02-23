@@ -560,6 +560,8 @@ void smallRed()
   autonStack(rightBack.get_position());
 }
 
+
+
 /**
  * Defines the drivepath for the small red goal zone. The motions are currently
  * automatically profiled with the use of PIDs.
@@ -620,23 +622,6 @@ void smallBlue()
  * This sequence supports a MAXIMUM of: ONE (1) cube.
  */
 
-void testRed()
-{
-  //deploy();
-
-  lift.move(17);
-
-  moveRobot(-3100 - 900, FORWARD, 1, 200);
-  pros::delay(100);
-  moveRobot(400 + 900, LEFT, 0, 0);
-  pros::delay(100);
-  moveRobot(-650 - 900, FORWARD, 1, 200);
-  pros::delay(200);
-  moveRobot(-400 - 900, RIGHT, 1, 200);
-  pros::delay(300);
-  moveRobot(3200 + 900, REVERSE, 1, 50);
-  pros::delay(100);
-}
 
 void bigRed3()
 {
@@ -707,16 +692,10 @@ void bigBlue(int select)
 
 void progSkills()
 {
-  moveRobot(-3200 - 900, FORWARD, 1, 200);
-  perfectTurn(400, 330, LEFT);
-  moveRobot(-300 - 900, FORWARD, 1, 200);
-  moveRobot(300 + 900, REVERSE, 0, 0);
-  perfectTurn(-400, 0, RIGHT);
-  moveRobot(-3000 - 900, FORWARD, 1, 200);
-  perfectTurn(-600, 40, RIGHT);
-  moveRobot(-800 - 900, FORWARD, 1, 200);
+  smallRed();
+  moveRobot(700 + 900, REVERSE, 0, 0);
+  strafeRobot(RIGHT, 100, 1000);
 
-  autonStack(rightBack.get_position());
 
   // moveRobot();// are you dead
   // it BUILDs!
@@ -755,8 +734,8 @@ void opcontrol()
     pros::lcd::set_text(3, "Goofy temp " + std::to_string(lift.get_temperature()));
     // pros::lcd::set_text(8, "Motor RB " + std::to_string(rightBack.get_temperature()));
     // pros::lcd::set_text(9, "Motor LB" + std::to_string(leftBack.get_temperature()));
-    pros::lcd::set_text(6, "x-AXIS: " + std::to_string(inertial.get_heading()));
-    pros::lcd::set_text(7, "Rotation: " + std::to_string(inertial.get_roll()));
+    pros::lcd::set_text(6, "leftIntake:  " + std::to_string(leftIntake.get_temperature()));
+    pros::lcd::set_text(7, "rigthIntake: " + std::to_string(rightIntake.get_temperature()));
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
     {
@@ -771,7 +750,14 @@ void opcontrol()
     leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+
+    if (abs(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 20) {
+      center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+    } else {
+      center.move(0);
+      center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+    
 
     // Keeping the motors at move_velocity(0) keeps the motor position locked.
     leftIntake.move_velocity(0);
@@ -784,6 +770,7 @@ void opcontrol()
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
+    
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
     {
@@ -792,10 +779,10 @@ void opcontrol()
         leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       }
-      leftFront.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      leftBack.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      rightBack.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      rightFront.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      leftFront.move(-0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      leftBack.move(-0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      rightBack.move(0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      rightFront.move(0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
     }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
@@ -832,11 +819,11 @@ void opcontrol()
 
     pros::delay(20);
 
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
-    {
-      rightBack.tare_position();
-      autonStack(rightBack.get_position());
-    }
+    // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+    // {
+    //   rightBack.tare_position();
+    //   autonStack(rightBack.get_position());
+    // }
 
     //Tower Macros
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
@@ -871,7 +858,7 @@ void opcontrol()
 
     if (toggle % 2 != 0)
     {
-      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
         control = 0;
         stop = 4;
       }
