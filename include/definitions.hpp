@@ -21,7 +21,7 @@ pros::Motor lift(14);
 pros::Motor center(16);
 pros::ADIEncoder encoder(1, 2, false);
 pros::ADIAnalogIn gyro('H');
-pros::Imu inertial(9);
+pros::Imu inertial(21);
 
 int origin = 0;
 int secure = 0;
@@ -34,10 +34,13 @@ int start = 0;
 int control = 4;
 int toggle = 1;
 int cancel = 0;
+
+int rumble = 0;
+int rumble2 = 0;
 // Defining PID Params for the angler and the drivebase.
+int speedup = 0;
 
-
-std::array<double, 3> anglerPIDParams = {0.1, 0, 0};
+std::array<double, 3> anglerPIDParams = {0.07, 0, 0};
 std::array<double, 3> drivebasePIDParams = {0.032, 0, 0};
 
 #endif

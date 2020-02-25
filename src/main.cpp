@@ -437,6 +437,7 @@ void autonStack(double reset)
 
     pros::delay(800);
 
+    moveRobotManual(TRANS_DOWN, 200, 80, 0, 0);
     moveRobotManual(REVERSE, 1000, 80, 1, -80);
     stopDrivebase();
   }
@@ -512,73 +513,6 @@ void perfectTurn(double encoder, int degree, DIRECTION direction)
   }
 }
 
-void smallBlue()
-{
-  deploy();
-
-  lift.move(17);
-  /*
-   * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
-   * of the robot from its starting position. By the end of this motion, the robot will
-   * have 4 cubes in the tray (possible 5 based on the placement of the preload after
-   * the robot deploys).
-   */
-
-  moveRobot(-3300 - 900, FORWARD, 1, 200);
-  moveRobot(2840 + 900, REVERSE, 1, 100);
-
-  /*
-   * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
-   * facing its starting direction). This is done so that once the robot is moved with
-   * its next motion, it will be directly in front of the small goalzone. The robot will
-   * complete this motion (rotation) with a left turn, so that it's easier to align
-   * in its next motion.
-   */
-  moveRobot(800 + 900, LEFT, 0, 0);
-
-  /*
-   * Move RIGHT by strafing using the H-drive's center wheel. This will allow the robot
-   * to move into the right perimeter wall. In doing so, the robot will automatically
-   * be aligned to be perfectly in front of the goalzone.
-   */
-  strafeRobot(RIGHT, 200, 1200);
-  strafeRobot(RIGHT, 0, 0);
-
-  /*
-   * Move FORWARD, towards the goalzone. The robot will stop slightly away from the goal
-   * zone, and will leave the right amount of room for the stacking process.
-   */
-  //moveRobot(-630 - 900, FORWARD, 0, 0);
-
-  leftBack.move(60);
-  leftFront.move(-60);
-  rightBack.move(-60);
-  rightFront.move(60);
-
-  leftIntake.move(-30);
-  rightIntake.move(30);
-
-  pros::delay(630);
-
-  leftBack.move(0);
-  leftFront.move(0);
-  rightBack.move(0);
-  rightFront.move(0);
-
-  pros::delay(200);
-
-  rightBack.tare_position();
-
-  // STACK the cubes. This is the end of the autonomous sequence.
-  autonStack(rightBack.get_position());
-}
-
-/**
- * Defines the drivepath for the small red goal zone. The motions are currently
- * automatically profiled with the use of PIDs.
- * This sequence supports a MAXIMUM of: FOUR (4) cubes.
- */
-
 void smallRed()
 {
   deploy();
@@ -608,7 +542,7 @@ void smallRed()
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone.
    */
-  strafeRobot(LEFT, 200, 2200);
+  strafeRobot(LEFT, 200, 1800);
   strafeRobot(LEFT, 0, 0);
 
   /*
@@ -627,36 +561,68 @@ void smallRed()
   autonStack(rightBack.get_position());
 }
 
+
+
+/**
+ * Defines the drivepath for the small red goal zone. The motions are currently
+ * automatically profiled with the use of PIDs.
+ * This sequence supports a MAXIMUM of: FOUR (4) cubes.
+ */
+
+void smallBlue()
+{
+  deploy();
+
+  lift.move(17);
+  /*
+   * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
+   * of the robot from its starting position. By the end of this motion, the robot will
+   * have 4 cubes in the tray (possible 5 based on the placement of the preload after
+   * the robot deploys).
+   */
+
+  moveRobot(-3300 - 900, FORWARD, 1, 200);
+  moveRobot(2840 + 900, REVERSE, 1, 100);
+
+  /*
+   * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
+   * facing its starting direction). This is done so that once the robot is moved with
+   * its next motion, it will be directly in front of the small goalzone. The robot will
+   * complete this motion (rotation) with a left turn, so that it's easier to align
+   * in its next motion.
+   */
+  moveRobot(750 + 900, LEFT, 0, 0);
+
+  /*
+   * Move RIGHT by strafing using the H-drive's center wheel. This will allow the robot
+   * to move into the right perimeter wall. In doing so, the robot will automatically
+   * be aligned to be perfectly in front of the goalzone.
+   */
+  strafeRobot(RIGHT, 200, 1800);
+  strafeRobot(LEFT, 0, 0);
+
+  /*
+   * Move FORWARD, towards the goalzone. The robot will stop slightly away from the goal
+   * zone, and will leave the right amount of room for the stacking process.
+   */
+  //moveRobot(-630 - 900, FORWARD, 0, 0);
+  //forwards();
+
+  moveRobot(-700 - 900, FORWARD, 1, -30);
+  pros::delay(200);
+
+  rightBack.tare_position();
+
+  // STACK the cubes. This is the end of the autonomous sequence.
+  autonStack(rightBack.get_position());
+}
+
 /**
  * Defines the drivepath for the big red goal zone. The motions are currently manually
  * profiled using the 'moveRobotManual' function.
  * This sequence supports a MAXIMUM of: ONE (1) cube.
  */
 
-void testRed()
-{
-  //deploy();
-
-  lift.move(17);
-
-  moveRobot(-3100 - 900, FORWARD, 1, 200);
-  pros::delay(100);
-  moveRobot(400 + 900, LEFT, 0, 0);
-  pros::delay(100);
-  moveRobot(-650 - 900, FORWARD, 1, 200);
-  pros::delay(200);
-  moveRobot(-400 - 900, RIGHT, 1, 200);
-  pros::delay(300);
-  moveRobot(3200 + 900, REVERSE, 1, 50);
-  pros::delay(100);
-  // moveRobot(-800 - 900, RIGHT, 1, -25);
-
-  // strafeRobot(LEFT, 200, 1200);
-  // strafeRobot(LEFT, 0, 0);
-
-  // rightBack.tare_position();
-  // moveRobot(-300 - 900, FORWARD, 0, 0);
-}
 
 void bigRed3()
 {
@@ -673,14 +639,36 @@ void bigRed3()
 
 void bigRed4()
 {
-  moveRobot(-1300 - 900, FORWARD, 1, 200);
-  moveRobot(-750 - 900, RIGHT, 0, 0);
-  moveRobot(-900 - 900, FORWARD, 1, 200);
+  deploy();
+  pros::delay(300);
+
+  lift.move(17);
+  moveRobot(-1500 - 900, FORWARD, 1, 200);
+  moveRobot(-740 - 900, RIGHT, 0, 0);
+  moveRobot(-950 - 900, FORWARD, 1, 150);
   
-  moveRobot(1100 + 900, LEFT, 1, 100);
+  moveRobot(1000 + 900, LEFT, 1, 100);
   moveRobot(-2200 - 900, FORWARD, 1, 200);
-  moveRobot(480 + 900, LEFT, 1, 200);
+  moveRobot(430 + 900, LEFT, 1, 200);
   moveRobot(-800 - 900, FORWARD, 1, -35);
+
+  rightBack.tare_position();
+  autonStack(rightBack.get_position());
+}
+
+void bigBlue4() {
+  //deploy();
+  pros::delay(300);
+
+  lift.move(17);
+  moveRobot(-1400 - 900, FORWARD, 1, 200);
+  moveRobot(670 + 900, LEFT, 0, 0);
+  moveRobot(-1000 - 900, FORWARD, 1, 150);
+  
+  moveRobot(-1160 - 900, RIGHT, 1, 100);
+  moveRobot(-2400 - 900, FORWARD, 1, 200);
+  moveRobot( -450 - 900, RIGHT, 1, 200);
+  moveRobot(-1210 - 900, FORWARD, 1, -27);
 
   rightBack.tare_position();
   autonStack(rightBack.get_position());
@@ -721,22 +709,19 @@ void bigBlue(int select)
     rightBack.tare_position();
     autonStack(rightBack.get_position());
   }
+  else if(select == 4) {
+    bigBlue4();
+  }
 }
 
 
 
 void progSkills()
 {
-  moveRobot(-3200 - 900, FORWARD, 1, 200);
-  perfectTurn(400, 330, LEFT);
-  moveRobot(-300 - 900, FORWARD, 1, 200);
-  moveRobot(300 + 900, REVERSE, 0, 0);
-  perfectTurn(-400, 0, RIGHT);
-  moveRobot(-3000 - 900, FORWARD, 1, 200);
-  perfectTurn(-600, 40, RIGHT);
-  moveRobot(-800 - 900, FORWARD, 1, 200);
+  smallRed();
+  moveRobot(700 + 900, REVERSE, 0, 0);
+  strafeRobot(RIGHT, 100, 1000);
 
-  autonStack(rightBack.get_position());
 
   // moveRobot();// are you dead
   // it BUILDs!
@@ -752,7 +737,8 @@ void callibrateIMU()
 
 void autonomous()
 {
-  bigRed4();
+  
+  bigBlue4();
 }
 
 /**
@@ -766,6 +752,11 @@ void opcontrol()
 
   while (true)
   {
+    
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+      rightBack.tare_position();
+      autonStack(rightBack.get_position());
+    }
 
     pros::delay(20);
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
@@ -775,8 +766,8 @@ void opcontrol()
     pros::lcd::set_text(3, "Goofy temp " + std::to_string(lift.get_temperature()));
     // pros::lcd::set_text(8, "Motor RB " + std::to_string(rightBack.get_temperature()));
     // pros::lcd::set_text(9, "Motor LB" + std::to_string(leftBack.get_temperature()));
-    pros::lcd::set_text(6, "x-AXIS: " + std::to_string(inertial.get_heading()));
-    pros::lcd::set_text(7, "Rotation: " + std::to_string(inertial.get_roll()));
+    pros::lcd::set_text(6, "leftIntake:  " + std::to_string(leftIntake.get_temperature()));
+    pros::lcd::set_text(7, "rigthIntake: " + std::to_string(rightIntake.get_temperature()));
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
     {
@@ -791,7 +782,14 @@ void opcontrol()
     leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+
+    if (abs(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 20) {
+      center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+    } else {
+      center.move(0);
+      center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+    
 
     // Keeping the motors at move_velocity(0) keeps the motor position locked.
     leftIntake.move_velocity(0);
@@ -804,6 +802,26 @@ void opcontrol()
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+      leftIntake.move_velocity(55);
+      rightIntake.move_velocity(-55);
+    }
+
+    if(leftIntake.get_temperature() > 45 || rightIntake.get_temperature() > 45) {
+      if(rumble != 1 && rumble < 2 ) {
+        master.rumble(".-");
+        rumble++;
+      }
+    }
+
+    if(leftIntake.get_temperature() > 40 || rightIntake.get_temperature() > 40) {
+      if(rumble2 != 1 && rumble2 < 2) {
+        master.rumble(".");
+        rumble2++;
+      }
+    }
+
+    
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
     {
@@ -812,10 +830,10 @@ void opcontrol()
         leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
         rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       }
-      leftFront.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      leftBack.move(-0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      rightBack.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-      rightFront.move(0.5 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      leftFront.move(-0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      leftBack.move(-0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      rightBack.move(0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
+      rightFront.move(0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
     }
 
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
@@ -852,11 +870,11 @@ void opcontrol()
 
     pros::delay(20);
 
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
-    {
-      rightBack.tare_position();
-      autonStack(rightBack.get_position());
-    }
+    // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+    // {
+    //   rightBack.tare_position();
+    //   autonStack(rightBack.get_position());
+    // }
 
     //Tower Macros
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
@@ -891,6 +909,11 @@ void opcontrol()
 
     if (toggle % 2 != 0)
     {
+      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+        control = 0;
+        stop = 4;
+      }
+
       if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && control != 0)
       {
         stop = 3;
@@ -920,7 +943,7 @@ void opcontrol()
 
       if (control == 1 && stop == 4)
       {
-        if (lift.get_position() >= -1500)
+        if (lift.get_position() >= -1550)
         {
           lift.move(-140);
         }
@@ -942,7 +965,7 @@ void opcontrol()
         }
       }
 
-      if (stop == 0 && stop != 6)
+      if (control == 0 && stop != 6)
       {
         if (lift.get_position() < 0)
         {
