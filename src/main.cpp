@@ -437,6 +437,7 @@ void autonStack(double reset)
 
     pros::delay(800);
 
+    moveRobotManual(TRANS_DOWN, 200, 80, 0, 0);
     moveRobotManual(REVERSE, 1000, 80, 1, -80);
     stopDrivebase();
   }
@@ -541,7 +542,7 @@ void smallRed()
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone.
    */
-  strafeRobot(LEFT, 100, 2200);
+  strafeRobot(LEFT, 200, 1800);
   strafeRobot(LEFT, 0, 0);
 
   /*
@@ -597,7 +598,7 @@ void smallBlue()
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone.
    */
-  strafeRobot(RIGHT, 100, 2200);
+  strafeRobot(RIGHT, 200, 1800);
   strafeRobot(LEFT, 0, 0);
 
   /*
@@ -607,7 +608,7 @@ void smallBlue()
   //moveRobot(-630 - 900, FORWARD, 0, 0);
   //forwards();
 
-  moveRobot(-600 - 900, FORWARD, 1, -40);
+  moveRobot(-700 - 900, FORWARD, 1, -30);
   pros::delay(200);
 
   rightBack.tare_position();
@@ -638,14 +639,36 @@ void bigRed3()
 
 void bigRed4()
 {
-  moveRobot(-1300 - 900, FORWARD, 1, 200);
-  moveRobot(-750 - 900, RIGHT, 0, 0);
-  moveRobot(-900 - 900, FORWARD, 1, 200);
+  deploy();
+  pros::delay(300);
+
+  lift.move(17);
+  moveRobot(-1500 - 900, FORWARD, 1, 200);
+  moveRobot(-740 - 900, RIGHT, 0, 0);
+  moveRobot(-950 - 900, FORWARD, 1, 150);
   
-  moveRobot(1100 + 900, LEFT, 1, 100);
+  moveRobot(1000 + 900, LEFT, 1, 100);
   moveRobot(-2200 - 900, FORWARD, 1, 200);
-  moveRobot(480 + 900, LEFT, 1, 200);
+  moveRobot(430 + 900, LEFT, 1, 200);
   moveRobot(-800 - 900, FORWARD, 1, -35);
+
+  rightBack.tare_position();
+  autonStack(rightBack.get_position());
+}
+
+void bigBlue4() {
+  //deploy();
+  pros::delay(300);
+
+  lift.move(17);
+  moveRobot(-1400 - 900, FORWARD, 1, 200);
+  moveRobot(670 + 900, LEFT, 0, 0);
+  moveRobot(-1000 - 900, FORWARD, 1, 150);
+  
+  moveRobot(-1160 - 900, RIGHT, 1, 100);
+  moveRobot(-2400 - 900, FORWARD, 1, 200);
+  moveRobot( -450 - 900, RIGHT, 1, 200);
+  moveRobot(-1210 - 900, FORWARD, 1, -27);
 
   rightBack.tare_position();
   autonStack(rightBack.get_position());
@@ -686,6 +709,9 @@ void bigBlue(int select)
     rightBack.tare_position();
     autonStack(rightBack.get_position());
   }
+  else if(select == 4) {
+    bigBlue4();
+  }
 }
 
 
@@ -711,7 +737,8 @@ void callibrateIMU()
 
 void autonomous()
 {
-  bigRed4();
+  
+  bigBlue4();
 }
 
 /**
@@ -725,6 +752,11 @@ void opcontrol()
 
   while (true)
   {
+    
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
+      rightBack.tare_position();
+      autonStack(rightBack.get_position());
+    }
 
     pros::delay(20);
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
@@ -769,6 +801,25 @@ void opcontrol()
     leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+      leftIntake.move_velocity(55);
+      rightIntake.move_velocity(-55);
+    }
+
+    if(leftIntake.get_temperature() > 45 || rightIntake.get_temperature() > 45) {
+      if(rumble != 1 && rumble < 2 ) {
+        master.rumble(".-");
+        rumble++;
+      }
+    }
+
+    if(leftIntake.get_temperature() > 40 || rightIntake.get_temperature() > 40) {
+      if(rumble2 != 1 && rumble2 < 2) {
+        master.rumble(".");
+        rumble2++;
+      }
+    }
 
     
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
@@ -892,7 +943,7 @@ void opcontrol()
 
       if (control == 1 && stop == 4)
       {
-        if (lift.get_position() >= -1500)
+        if (lift.get_position() >= -1550)
         {
           lift.move(-140);
         }
