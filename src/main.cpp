@@ -727,12 +727,6 @@ void opcontrol()
 
   while (true)
   {
-    
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)) {
-      rightBack.tare_position();
-      autonStack(rightBack.get_position());
-    }
-
     pros::delay(20);
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
