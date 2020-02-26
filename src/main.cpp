@@ -725,6 +725,8 @@ void autonomous()
 void opcontrol()
 {
 
+   const int gpos = grip.get_position();
+
   while (true)
   {
     pros::delay(20);
@@ -738,31 +740,32 @@ void opcontrol()
     pros::lcd::set_text(6, "leftIntake:  " + std::to_string(leftIntake.get_temperature()));
     pros::lcd::set_text(7, "rigthIntake: " + std::to_string(rightIntake.get_temperature()));
 
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
-    {
-      inertial.reset();
-    }
     // pros::c::imu_gyro_s_t gyro = inertial.get_gyro_rate();
     // pros::lcd::set_text(2, "IMU {x:" + std::to_string(gyro.x) + " y: " + std::to_string(gyro.y) + " z: " + std::to_string(gyro.z));
     // pros::delay(20);
+
+    if(grip.get_position() > gpos) {
+      grip.move(-17);
+    }
 
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-
+    
+   
     // if (abs(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 20) {
     //   center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
     // } else {
     grip.move(-17);
     grip.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     // }
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
       grip.move(50);
     }
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
       grip.move(-50);
     }
 
@@ -800,11 +803,6 @@ void opcontrol()
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
     {
-      if (master.get_digital(pros::E_CONTROLLER_DIGITAL_X))
-      {
-        leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-        rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      }
       leftFront.move(-0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
       leftBack.move(-0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
       rightBack.move(0.6 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
@@ -852,7 +850,7 @@ void opcontrol()
     // }
 
     //Tower Macros
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_A))
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
     {
       toggle++;
       pros::delay(100);
