@@ -761,10 +761,16 @@ void opcontrol()
     // if (abs(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 20) {
     //   center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
     // } else {
-    //   center.move(0);
-    //   center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    grip.move(-17);
+    grip.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     // }
-    
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+      grip.move(50);
+    }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+      grip.move(-50);
+    }
 
     // Keeping the motors at move_velocity(0) keeps the motor position locked.
     leftIntake.move_velocity(0);
