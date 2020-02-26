@@ -3,7 +3,8 @@
  * For:        VEX VRC Competition (Tower Takeover) 2019-2020
  * On:         January 25, 2020 (for Terrebonne Competition)
  */
-
+#define OPEN 0;
+#define CLOSE -200;
 // Including required .
 #include "main.h"
 #include "pros/api_legacy.h"
@@ -61,6 +62,9 @@ PID *anglerPIDController = new PID(
     &anglerPIDParams[0],
     &anglerPIDParams[1],
     &anglerPIDParams[2]);
+
+std::array<double,3> pidValues = {1,0,0};
+PID* gripPid = new PID (&pidValues[0], &pidValues[1], &pidValues[2]);
 
 PID *drivebasePIDController = new PID(
     &drivebasePIDParams[0],
@@ -378,6 +382,7 @@ void autonStack(double reset)
   while (true)
   {
 
+
     double movFactor = anglerPIDController->update(reset + 1400, rightBack.get_position());
 
     if (movFactor < 30)
@@ -438,6 +443,7 @@ void autonStack(double reset)
  */
 void initialize()
 {
+
   pros::lcd::initialize();
   inertial.reset();
 }
@@ -721,15 +727,20 @@ void autonomous()
  * robot. It also contains the necessary event listeners to trigger the driver's movements
  * and enable macros as requested.
  */
+  int gripMode = 1;
+
 
 void opcontrol()
 {
 
    const int gpos = grip.get_position();
-
+  //Grip Max is going to be the position where you want it to go when it is locked
   while (true)
   {
+    
     pros::delay(20);
+    
+    
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
     // pros::lcd::set_text(6, " Motor LF " + std::to_string(leftFront.get_temperature()));
@@ -740,34 +751,25 @@ void opcontrol()
     pros::lcd::set_text(6, "leftIntake:  " + std::to_string(leftIntake.get_temperature()));
     pros::lcd::set_text(7, "rigthIntake: " + std::to_string(rightIntake.get_temperature()));
 
-    // pros::c::imu_gyro_s_t gyro = inertial.get_gyro_rate();
-    // pros::lcd::set_text(2, "IMU {x:" + std::to_string(gyro.x) + " y: " + std::to_string(gyro.y) + " z: " + std::to_string(gyro.z));
-    // pros::delay(20);
-
-    if(grip.get_position() > gpos) {
-      grip.move(-17);
-    }
-
+    
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     
-   
-    // if (abs(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 20) {
-    //   center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-    // } else {
-    grip.move(-17);
-    grip.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    // }
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-      grip.move(50);
+    if(master.get_digital_new_press(DIGITAL_A))
+    {
+      gripMode = OPEN;
+    } else if (master.get_digital_new_press(DIGITAL_X))
+    {
+      gripMode =  CLOSE;
     }
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-      grip.move(-50);
-    }
+    double gripValue = gripPid->update(gripMode, grip.get_position());
+    // Grip mode - 0 is off, 1 is on
+    grip.move_voltage(gripValue);
+    
 
     // Keeping the motors at move_velocity(0) keeps the motor position locked.
     leftIntake.move_velocity(0);
@@ -775,9 +777,6 @@ void opcontrol()
     leftIntake.move_velocity(-0);
     rightIntake.move_velocity(0);
 
-    // brake_bold keeps the motors in brake mode so the motors will actively resist movement, are locked in position.
-    leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     //center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
@@ -833,23 +832,7 @@ void opcontrol()
       pros::delay(20);
     }
 
-    /*
-		 * In the initalization (before the competition starts), the grippy tray will always be set up
-		 * in a neutral position and the code will attempt to return the grippy arm to this neutral position
-		 * unless a different position is required (either due to driver control or in the auton sequence).
-		 */
-
-    // Driver control and macros for the grippy arm.
-
-    pros::delay(20);
-
-    // if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
-    // {
-    //   rightBack.tare_position();
-    //   autonStack(rightBack.get_position());
-    // }
-
-    //Tower Macros
+    // Driver control and macros for the goofy arm.
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
     {
       toggle++;
