@@ -168,12 +168,12 @@ void stopDrivebase()
  * @param motorSpeed  sets the speed of the center motor
  * @param motorDelay  determines for how long the motors will be moving
  */
-void strafeRobot(DIRECTION direction, int motorSpeed, int motorDelay)
-{
-  int speedCof = direction == LEFT ? -1 : 1;
-  center.move(speedCof * motorSpeed);
-  pros::delay(motorDelay);
-}
+// void strafeRobot(DIRECTION direction, int motorSpeed, int motorDelay)
+// {
+//   int speedCof = direction == LEFT ? -1 : 1;
+//   center.move(speedCof * motorSpeed);
+//   pros::delay(motorDelay);
+// }
 
 int resetCof(int cof)
 {
@@ -270,11 +270,6 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
       }
     }
 
-    if (encoderValue == 3200 + 900)
-    {
-      movFactor = 150;
-    }
-
     if (encoderValue == -900 - 800)
     {
       movFactor = movFactor * 1.4;
@@ -288,11 +283,6 @@ void moveRobot(double encoderValue, DIRECTION direction, int intakeMove, int int
     if (direction == LEFT || direction == RIGHT)
     {
       movFactor = 70;
-    }
-
-    if (encoderValue == 1300)
-    {
-      movFactor = 50;
     }
 
     if (encoderValue < 0)
@@ -526,7 +516,7 @@ void smallRed()
    */
 
   moveRobot(-3300 - 900, FORWARD, 1, 200);
-  moveRobot(2840 + 900, REVERSE, 1, 100);
+  moveRobot(3000 + 900, REVERSE, 1, 100);
 
   /*
    * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
@@ -535,15 +525,15 @@ void smallRed()
    * complete this motion (rotation) with a left turn, so that it's easier to align
    * in its next motion.
    */
-  moveRobot(-750 - 900, RIGHT, 0, 0);
+  moveRobot(-700 - 900, RIGHT, 0, 0);
 
   /*
    * Move RIGHT by strafing using the H-drive's center wheel. This will allow the robot
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone.
    */
-  strafeRobot(LEFT, 200, 1800);
-  strafeRobot(LEFT, 0, 0);
+  // strafeRobot(LEFT, 200, 1800);
+  // strafeRobot(LEFT, 0, 0);
 
   /*
    * Move FORWARD, towards the goalzone. The robot will stop slightly away from the goal
@@ -582,7 +572,7 @@ void smallBlue()
    */
 
   moveRobot(-3300 - 900, FORWARD, 1, 200);
-  moveRobot(2840 + 900, REVERSE, 1, 100);
+  moveRobot(3000 + 900, REVERSE, 1, 100);
 
   /*
    * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
@@ -591,15 +581,15 @@ void smallBlue()
    * complete this motion (rotation) with a left turn, so that it's easier to align
    * in its next motion.
    */
-  moveRobot(750 + 900, LEFT, 0, 0);
+  moveRobot(700 + 900, LEFT, 0, 0);
 
   /*
    * Move RIGHT by strafing using the H-drive's center wheel. This will allow the robot
    * to move into the right perimeter wall. In doing so, the robot will automatically
    * be aligned to be perfectly in front of the goalzone.
    */
-  strafeRobot(RIGHT, 200, 1800);
-  strafeRobot(LEFT, 0, 0);
+  // strafeRobot(RIGHT, 200, 1800);
+  // strafeRobot(LEFT, 0, 0);
 
   /*
    * Move FORWARD, towards the goalzone. The robot will stop slightly away from the goal
@@ -644,7 +634,7 @@ void bigRed4()
 
   lift.move(17);
   moveRobot(-1500 - 900, FORWARD, 1, 200);
-  moveRobot(-740 - 900, RIGHT, 0, 0);
+  moveRobot(-700 - 900, RIGHT, 0, 0);
   moveRobot(-950 - 900, FORWARD, 1, 150);
   
   moveRobot(1000 + 900, LEFT, 1, 100);
@@ -714,21 +704,6 @@ void bigBlue(int select)
   }
 }
 
-
-
-void progSkills()
-{
-  smallRed();
-  moveRobot(700 + 900, REVERSE, 0, 0);
-  strafeRobot(RIGHT, 100, 1000);
-
-
-  // moveRobot();// are you dead
-  // it BUILDs!
-  // just chekc for logic, based on my understanding it should work nwo
-  // because if so, then I would say, HI DEAD< IM MALVA
-}
-
 void callibrateIMU()
 {
   inertial.reset();
@@ -783,12 +758,12 @@ void opcontrol()
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
 
-    if (abs(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 20) {
-      center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
-    } else {
-      center.move(0);
-      center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    }
+    // if (abs(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)) > 20) {
+    //   center.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X));
+    // } else {
+    //   center.move(0);
+    //   center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    // }
     
 
     // Keeping the motors at move_velocity(0) keeps the motor position locked.
@@ -800,7 +775,7 @@ void opcontrol()
     // brake_bold keeps the motors in brake mode so the motors will actively resist movement, are locked in position.
     leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    //center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
       leftIntake.move_velocity(55);

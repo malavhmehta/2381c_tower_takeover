@@ -18,7 +18,7 @@ pros::Motor rightFront(20);
 pros::Motor leftIntake(10);
 pros::Motor rightIntake(15);
 pros::Motor lift(14);
-pros::Motor center(16);
+//pros::Motor center(16);
 pros::ADIEncoder encoder(1, 2, false);
 pros::ADIAnalogIn gyro('H');
 pros::Imu inertial(21);
