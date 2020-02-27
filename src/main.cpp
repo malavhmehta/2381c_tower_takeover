@@ -3,8 +3,6 @@
  * For:        VEX VRC Competition (Tower Takeover) 2019-2020
  * On:         January 25, 2020 (for Terrebonne Competition)
  */
-#define OPEN 0;
-#define CLOSE -200;
 // Including required .
 #include "main.h"
 #include "pros/api_legacy.h"
@@ -521,8 +519,8 @@ void smallRed()
    * the robot deploys).
    */
 
-  moveRobot(-3300 - 900, FORWARD, 1, 200);
-  moveRobot(3000 + 900, REVERSE, 1, 100);
+  moveRobot(-3200 - 900, FORWARD, 1, 200);
+  moveRobot(3200 + 900, REVERSE, 1, 100);
 
   /*
    * Make a 180 DEGREE TURN, so that the robot is now facing the opposite direction (or
@@ -531,7 +529,7 @@ void smallRed()
    * complete this motion (rotation) with a left turn, so that it's easier to align
    * in its next motion.
    */
-  moveRobot(-700 - 900, RIGHT, 0, 0);
+  moveRobot(-650 - 900, RIGHT, 0, 0);
 
   /*
    * Move RIGHT by strafing using the H-drive's center wheel. This will allow the robot
@@ -548,7 +546,7 @@ void smallRed()
   //moveRobot(-630 - 900, FORWARD, 0, 0);
   //forwards();
 
-  moveRobot(-600 - 900, FORWARD, 1, -40);
+  moveRobot(-650 - 900, FORWARD, 1, -40);
   pros::delay(200);
 
   rightBack.tare_position();
@@ -639,14 +637,15 @@ void bigRed4()
   pros::delay(300);
 
   lift.move(17);
-  moveRobot(-1500 - 900, FORWARD, 1, 200);
+  moveRobot(-1000 - 900, FORWARD, 1, 200);
   moveRobot(-700 - 900, RIGHT, 0, 0);
-  moveRobot(-950 - 900, FORWARD, 1, 150);
-  
-  moveRobot(1000 + 900, LEFT, 1, 100);
-  moveRobot(-2200 - 900, FORWARD, 1, 200);
-  moveRobot(430 + 900, LEFT, 1, 200);
-  moveRobot(-800 - 900, FORWARD, 1, -35);
+  moveRobot(-800 - 900, FORWARD, 1, 150);
+  pros::delay(100);
+  moveRobot(900 + 900, LEFT, 1, 100);
+  pros::delay(100);
+  moveRobot(-2280 - 900, FORWARD, 1, 200);
+  moveRobot(390 + 900, LEFT, 1, 200);
+  moveRobot(-500 - 900, FORWARD, 1, -44);
 
   rightBack.tare_position();
   autonStack(rightBack.get_position());
@@ -657,7 +656,7 @@ void bigBlue4() {
   pros::delay(300);
 
   lift.move(17);
-  moveRobot(-1400 - 900, FORWARD, 1, 200);
+  moveRobot(-1000 - 900, FORWARD, 1, 200);
   moveRobot(670 + 900, LEFT, 0, 0);
   moveRobot(-1000 - 900, FORWARD, 1, 150);
   
@@ -719,7 +718,7 @@ void callibrateIMU()
 void autonomous()
 {
   
-  bigBlue4();
+  smallRed();
 }
 
 /**
@@ -727,23 +726,51 @@ void autonomous()
  * robot. It also contains the necessary event listeners to trigger the driver's movements
  * and enable macros as requested.
  */
-  int gripMode = 1;
 
+int gripToggle = 0;
 
 void opcontrol()
 {
 
-   const int gpos = grip.get_position();
+  int counter = 0;
   //Grip Max is going to be the position where you want it to go when it is locked
   while (true)
   {
+    if(counter == 0 && grip.get_position() < 230) {
+      grip.move(80);
+    }
+
+    if(grip.get_position() > 230) {
+      counter++;
+    }
     
+    if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_X) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_A) && counter != 0) {
+      grip.move(4);
+    }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+      grip.move(-5);
+      gripToggle++;
+    }
+
+    if(gripToggle > 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+      grip.move(-120);
+    }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
+      grip.move(70);
+      gripToggle = 0;
+    }
+
+
     pros::delay(20);
     
     
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
-    // pros::lcd::set_text(6, " Motor LF " + std::to_string(leftFront.get_temperature()));
+    
+    pros::lcd::set_text(2, "grip temperature: " + std::to_string(grip.get_temperature()));
+    pros::lcd::set_text(1, "grip position: " + std::to_string(grip.get_position()));
     // pros::lcd::set_text(7, "Motor RF " + std::to_string(rightFront.get_temperature()));
     pros::lcd::set_text(3, "Goofy temp " + std::to_string(lift.get_temperature()));
     // pros::lcd::set_text(8, "Motor RB " + std::to_string(rightBack.get_temperature()));
@@ -758,19 +785,6 @@ void opcontrol()
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     
-    if(master.get_digital_new_press(DIGITAL_A))
-    {
-      gripMode = OPEN;
-    } else if (master.get_digital_new_press(DIGITAL_X))
-    {
-      gripMode =  CLOSE;
-    }
-
-    double gripValue = gripPid->update(gripMode, grip.get_position());
-    // Grip mode - 0 is off, 1 is on
-    grip.move_voltage(gripValue);
-    
-
     // Keeping the motors at move_velocity(0) keeps the motor position locked.
     leftIntake.move_velocity(0);
     rightIntake.move_velocity(-0);

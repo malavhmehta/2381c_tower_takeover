@@ -213,7 +213,7 @@ void deploy()
   rightFront.move(0);
 
   pros::delay(400);
-
+  rightBack.tare_position();
   return;
 }
 
