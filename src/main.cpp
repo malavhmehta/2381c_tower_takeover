@@ -736,30 +736,16 @@ void opcontrol()
   //Grip Max is going to be the position where you want it to go when it is locked
   while (true)
   {
-    if(counter == 0 && grip.get_position() < 230) {
-      grip.move(80);
-    }
 
-    if(grip.get_position() > 230) {
-      counter++;
-    }
     
-    if(!master.get_digital(pros::E_CONTROLLER_DIGITAL_X) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_A) && counter != 0) {
-      grip.move(4);
-    }
+    grip.move_velocity(0);
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-      grip.move(-5);
-      gripToggle++;
-    }
-
-    if(gripToggle > 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-      grip.move(-120);
+      grip.move(50);
     }
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
-      grip.move(70);
-      gripToggle = 0;
+      grip.move(-50);
     }
 
 
@@ -787,10 +773,8 @@ void opcontrol()
     
     // Keeping the motors at move_velocity(0) keeps the motor position locked.
     leftIntake.move_velocity(0);
-    rightIntake.move_velocity(-0);
-    leftIntake.move_velocity(-0);
     rightIntake.move_velocity(0);
-
+    
     //center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
