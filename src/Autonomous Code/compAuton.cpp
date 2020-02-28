@@ -182,6 +182,8 @@ void oldBigBlue() {
 // Deploy function which will be called in autonomous to extend the tray of the robot.
 void deploy()
 {
+  grip.move_velocity(0);
+  
   while(lift.get_position() > -1900) {
     lift.move(-150);
   }
@@ -213,7 +215,7 @@ void deploy()
   rightFront.move(0);
 
   pros::delay(400);
-
+  rightBack.tare_position();
   return;
 }
 
