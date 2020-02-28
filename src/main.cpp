@@ -444,6 +444,16 @@ void initialize()
 
   pros::lcd::initialize();
   inertial.reset();
+
+  int time = pros::millis();
+  int iter = 0;
+  while (inertial.is_calibrating()) {
+    printf("IMU calibrating... %d\n", iter);
+    iter += 10;
+    pros::delay(10);
+  }
+  // should print about 2000 ms
+  printf("IMU is done calibrating (took %d ms)\n", iter - time);
 }
 
 /**
@@ -510,7 +520,7 @@ void perfectTurn(double encoder, int degree, DIRECTION direction)
 void smallRed()
 {
   deploy();
-
+  grip.move_velocity(0);
   lift.move(17);
   /*
    * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
@@ -566,7 +576,7 @@ void smallRed()
 void smallBlue()
 {
   deploy();
-
+  grip.move_velocity(0);
   lift.move(17);
   /*
    * Move FORWARD while INTAKING. This will get the 4 cubes which are directly in front
@@ -575,7 +585,7 @@ void smallBlue()
    * the robot deploys).
    */
 
-  moveRobot(-3300 - 900, FORWARD, 1, 200);
+  moveRobot(-3200 - 900, FORWARD, 1, 200);
   moveRobot(3000 + 900, REVERSE, 1, 100);
 
   /*
@@ -585,7 +595,7 @@ void smallBlue()
    * complete this motion (rotation) with a left turn, so that it's easier to align
    * in its next motion.
    */
-  moveRobot(700 + 900, LEFT, 0, 0);
+  moveRobot(750 + 900, LEFT, 0, 0);
 
   /*
    * Move RIGHT by strafing using the H-drive's center wheel. This will allow the robot
@@ -602,7 +612,7 @@ void smallBlue()
   //moveRobot(-630 - 900, FORWARD, 0, 0);
   //forwards();
 
-  moveRobot(-700 - 900, FORWARD, 1, -30);
+  moveRobot(-700 - 900, FORWARD, 1, -27);
   pros::delay(200);
 
   rightBack.tare_position();
@@ -636,37 +646,45 @@ void bigRed4()
   deploy();
   pros::delay(300);
 
+  grip.move_velocity(0);
   lift.move(17);
   moveRobot(-1000 - 900, FORWARD, 1, 200);
-  moveRobot(-700 - 900, RIGHT, 0, 0);
-  moveRobot(-800 - 900, FORWARD, 1, 150);
+  perfectTurn(700, 78, RIGHT);
+  moveRobot(-680 - 900, FORWARD, 1, 150);
   pros::delay(100);
-  moveRobot(900 + 900, LEFT, 1, 100);
+  perfectTurn(940, 305, LEFT);
   pros::delay(100);
-  moveRobot(-2280 - 900, FORWARD, 1, 200);
-  moveRobot(390 + 900, LEFT, 1, 200);
-  moveRobot(-500 - 900, FORWARD, 1, -44);
+  moveRobot(-2320 - 900, FORWARD, 1, 200);
+  moveRobot(410 + 900, LEFT, 1, 200);
+  moveRobot(-650 - 900, FORWARD, 1, -42);
 
   rightBack.tare_position();
   autonStack(rightBack.get_position());
 }
 
 void bigBlue4() {
-  //deploy();
+  deploy();
   pros::delay(300);
-
+  grip.move_velocity(0);
   lift.move(17);
-  moveRobot(-1000 - 900, FORWARD, 1, 200);
-  moveRobot(670 + 900, LEFT, 0, 0);
-  moveRobot(-1000 - 900, FORWARD, 1, 150);
-  
-  moveRobot(-1160 - 900, RIGHT, 1, 100);
+  moveRobot(-1200 - 900, FORWARD, 1, 200);
+  perfectTurn(700, 285, LEFT);
+  moveRobot(-550 - 900, FORWARD, 1, 150);
+
+  perfectTurn(1200, 65, RIGHT);
   moveRobot(-2400 - 900, FORWARD, 1, 200);
-  moveRobot( -450 - 900, RIGHT, 1, 200);
-  moveRobot(-1210 - 900, FORWARD, 1, -27);
+  moveRobot( -470 - 900, RIGHT, 1, 200);
+  moveRobot(-735 - 900, FORWARD, 1, -37);
 
   rightBack.tare_position();
   autonStack(rightBack.get_position());
+}
+
+void test2() {
+  pros::delay(2000);
+  perfectTurn(700, 90, RIGHT);
+  pros::delay(1000);
+  perfectTurn(1200, 270, LEFT);
 }
 
 void bigRed(int select)
@@ -709,16 +727,9 @@ void bigBlue(int select)
   }
 }
 
-void callibrateIMU()
-{
-  inertial.reset();
-  pros::delay(2400);
-}
-
 void autonomous()
 {
-  
-  smallRed();
+  bigRed(4);
 }
 
 /**
@@ -732,29 +743,88 @@ int gripToggle = 0;
 void opcontrol()
 {
 
-  int counter = 0;
+  int counter2 = 0;
+  int gripToggle = 0;
   //Grip Max is going to be the position where you want it to go when it is locked
   while (true)
   {
+    leftIntake.move_velocity(0);
+    rightIntake.move_velocity(0);
 
-    
+    leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && (!master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)))
+    {
+      leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      leftIntake.move_velocity(200);
+      rightIntake.move_velocity(-200);
+      pros::delay(20);
+    }
+
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && (!master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)))
+    {
+      leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      leftIntake.move_velocity(-80);
+      rightIntake.move_velocity(80);
+      pros::delay(20);
+    }
+
+
     grip.move_velocity(0);
+    grip.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
       grip.move(50);
+      gripToggle++;
+    }
+
+    if(gripToggle > 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_X) && !(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) && counter2 == 0) {
+      grip.move(20);
     }
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
       grip.move(-50);
+      gripToggle = 0;
     }
+
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+      counter2++;
+
+      gripToggle = 0;
+    }
+
+      if(grip.get_position() > -10 && counter2 > 0 ) {
+        grip.move(-30);
+      }
+
+      if(grip.get_position() < -25 && counter2 > 0) {
+        grip.move(30);
+      }
+
+      if(grip.get_position() > -40 && grip.get_position() < -10 && counter2 > 0) {
+        counter2 = 0;
+      }
+
+      // if(grip.get_position() > -5 || grip.get_position() < 5) {
+      //   counter2 = 0;
+      // }
+
+
+
+
+
+
 
 
     pros::delay(20);
-    
-    
+
+
     pros::lcd::set_text(4, "Motor pos: " + std::to_string(rightBack.get_position()));
     pros::lcd::set_text(5, "Goofy Position " + std::to_string(lift.get_position()));
-    
+
     pros::lcd::set_text(2, "grip temperature: " + std::to_string(grip.get_temperature()));
     pros::lcd::set_text(1, "grip position: " + std::to_string(grip.get_position()));
     // pros::lcd::set_text(7, "Motor RF " + std::to_string(rightFront.get_temperature()));
@@ -764,23 +834,15 @@ void opcontrol()
     pros::lcd::set_text(6, "leftIntake:  " + std::to_string(leftIntake.get_temperature()));
     pros::lcd::set_text(7, "rigthIntake: " + std::to_string(rightIntake.get_temperature()));
 
-    
+
     // Split acrade controls that control the drive base.
     leftFront.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     leftBack.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightBack.move(-1 * master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + -0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
     rightFront.move(master.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y) + 0.8 * master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
-    
-    // Keeping the motors at move_velocity(0) keeps the motor position locked.
-    leftIntake.move_velocity(0);
-    rightIntake.move_velocity(0);
-    
-    //center.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-      leftIntake.move_velocity(55);
-      rightIntake.move_velocity(-55);
-    }
+    // Keeping the motors at move_velocity(0) keeps the motor position locked.
+
 
     if(leftIntake.get_temperature() > 45 || rightIntake.get_temperature() > 45) {
       if(rumble != 1 && rumble < 2 ) {
@@ -796,7 +858,7 @@ void opcontrol()
       }
     }
 
-    
+
     // Shift buttons R1 (for tray tilt) and R2 (for goofy arm).
     if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
     {
@@ -810,24 +872,6 @@ void opcontrol()
     {
       lift.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
       lift.move(-master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y));
-    }
-
-    // Intake controls using the L2 and L1 buttons.
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
-    {
-      leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      leftIntake.move_velocity(200);
-      rightIntake.move_velocity(-200);
-      pros::delay(20);
-    }
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && !master.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
-    {
-      leftIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      rightIntake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      leftIntake.move_velocity(-80);
-      rightIntake.move_velocity(80);
-      pros::delay(20);
     }
 
     // Driver control and macros for the goofy arm.
@@ -863,11 +907,6 @@ void opcontrol()
 
     if (toggle % 2 != 0)
     {
-      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-        control = 0;
-        stop = 4;
-      }
-
       if (master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT) && control != 0)
       {
         stop = 3;
@@ -897,7 +936,7 @@ void opcontrol()
 
       if (control == 1 && stop == 4)
       {
-        if (lift.get_position() >= -1550)
+        if (lift.get_position() >= -1560)
         {
           lift.move(-140);
         }
@@ -924,6 +963,7 @@ void opcontrol()
         if (lift.get_position() < 0)
         {
           lift.move(100);
+
         }
         else
         {
@@ -934,4 +974,6 @@ void opcontrol()
 
     pros::delay(50);
   }
+
+
 }

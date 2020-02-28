@@ -296,7 +296,7 @@
         "upload_options": {
             "compress_bin": true,
             "description": "Created with PROS",
-            "remote_name": "smallRed",
+            "remote_name": "bigRed",
             "slot": 4
         }
     }
