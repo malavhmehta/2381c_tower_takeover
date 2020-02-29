@@ -729,7 +729,7 @@ void bigBlue(int select)
 
 void autonomous()
 {
-  bigRed(4);
+  bigBlue(4);
 }
 
 /**
@@ -782,7 +782,7 @@ void opcontrol()
     }
 
     if(gripToggle > 0 && !master.get_digital(pros::E_CONTROLLER_DIGITAL_X) && !(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) && master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) && counter2 == 0) {
-      grip.move(20);
+      grip.move(50);
     }
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)) {
